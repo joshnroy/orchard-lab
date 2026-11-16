@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orchard Lab PhD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wood:#8b5a2b; --wood-dark:#5a3415; --wood-light:#b97a3c;
+  --paper:#f7e2a8; --paper-dark:#e8c97a; --ink:#4a2b10;
+  --grass:#6cc04a; --grass-dark:#4e9a35; --sky:#9fd8ff; --sky2:#c7ecff;
+  --red:#d8402f; --green:#3f8f4a; --gold:#f5c542;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:#3b7a2a;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(0,0,0,.05) 0 8px, transparent 8px 16px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.04) 0 8px, transparent 8px 16px);
+  font-family:'VT323', ui-monospace, monospace; font-size:22px; color:var(--ink);
+  min-height:100vh;
+}
+img.px{image-rendering:pixelated; image-rendering:crisp-edges}
+.wrap{max-width:960px; margin:0 auto; padding:16px}
+h1,h2,h3,.pixel{font-family:'Press Start 2P', ui-monospace, monospace; font-weight:normal}
+.panel{
+  background:var(--paper); border:4px solid var(--wood-dark);
+  box-shadow: inset 0 0 0 4px var(--wood-light), inset 0 0 0 8px var(--paper-dark), 0 6px 0 rgba(0,0,0,.35);
+  border-radius:6px; padding:18px 20px;
+}
+.panel h3{font-size:12px; margin:0 0 10px; color:var(--wood-dark); letter-spacing:1px}
+.btn{
+  font-family:'VT323', monospace; font-size:24px; color:#fff8e0; cursor:pointer;
+  background:linear-gradient(#c98a45,#9a5f27); border:4px solid var(--wood-dark); border-radius:6px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.25), inset 0 3px 0 rgba(255,255,255,.25), 0 4px 0 rgba(0,0,0,.35);
+  padding:8px 16px; text-shadow:2px 2px 0 var(--wood-dark); transition:transform .05s;
+}
+.btn:hover:not(:disabled){filter:brightness(1.08); transform:translateY(-1px)}
+.btn:active:not(:disabled){transform:translateY(2px); box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 2px 0 rgba(0,0,0,.35)}
+.btn:disabled{filter:grayscale(.8) brightness(.8); cursor:not-allowed}
+.btn.green{background:linear-gradient(#6cc04a,#3f8f4a)}
+.btn.red{background:linear-gradient(#e46a4f,#b03a26)}
+.btn.blue{background:linear-gradient(#6aa8e0,#3a6ea8)}
+.btn.small{font-size:20px; padding:4px 10px}
+
+/* top bar */
+.topbar{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px; flex-wrap:wrap}
+.title-badge{font-size:14px; color:#fff8e0; text-shadow:3px 3px 0 var(--wood-dark); padding-top:8px; line-height:1.6}
+.clock{min-width:220px; padding:10px 14px; text-align:right; line-height:1.15}
+.clock .day{font-size:26px}
+.clock .sub{font-size:20px; opacity:.85}
+
+/* scene */
+.scene{position:relative; height:250px; overflow:hidden; border:4px solid var(--wood-dark); border-radius:6px;
+  background:linear-gradient(var(--sky) 0 30%, var(--sky2) 30% 55%, #b8e6a0 55% 58%, var(--grass) 58%);
+  box-shadow:0 6px 0 rgba(0,0,0,.35);}
+.scene .grass{position:absolute; left:0; right:0; bottom:0; height:42%;
+  background-image:
+    repeating-linear-gradient(90deg, transparent 0 22px, var(--grass-dark) 22px 26px, transparent 26px 48px),
+    repeating-linear-gradient(0deg, transparent 0 18px, rgba(0,0,0,.06) 18px 20px);
+  opacity:.55}
+.cloud{position:absolute; width:96px; height:24px; background:#fff; border-radius:2px; opacity:.95;
+  box-shadow:16px -12px 0 0 #fff, 40px -12px 0 0 #fff, 32px -20px 0 -4px #fff; animation:drift 60s linear infinite}
+@keyframes drift{from{transform:translateX(-160px)} to{transform:translateX(1100px)}}
+.sprite{position:absolute}
+#tree{right:30px; bottom:40px}
+#tree2{right:200px; bottom:70px; opacity:.85}
+#player{left:150px; bottom:34px; transition:transform .1s}
+#player.chop{animation:chop .45s steps(3) 1}
+@keyframes chop{0%{transform:translateY(0)}30%{transform:translateY(-14px)}60%{transform:translateY(4px)}100%{transform:translateY(0)}}
+.table{position:absolute; left:250px; bottom:40px; width:150px; height:56px; background:var(--wood); border:4px solid var(--wood-dark);
+  box-shadow: inset 0 6px 0 var(--wood-light)}
+.table::before,.table::after{content:''; position:absolute; bottom:-30px; width:12px; height:28px; background:var(--wood-dark)}
+.table::before{left:10px}.table::after{right:10px}
+.board{position:absolute; left:28px; top:-16px; width:90px; height:16px; background:#e2b977; border:3px solid #9a6a2c}
+#boardItem{position:absolute; left:58px; top:-48px}
+#knife{position:absolute; left:100px; top:-36px; transform-origin:80% 50%}
+#knife.slash{animation:slash .45s 1}
+@keyframes slash{0%{transform:rotate(0)}40%{transform:rotate(-35deg) translate(-6px,-6px)}70%{transform:rotate(10deg)}100%{transform:rotate(0)}}
+#advisorSprite{left:20px; bottom:34px}
+#expertSprite{left:420px; bottom:34px; display:none}
+.bubble{position:absolute; background:#fff; border:3px solid var(--ink); border-radius:6px; padding:2px 8px; font-size:20px; white-space:nowrap;
+  opacity:0; transition:opacity .2s; pointer-events:none}
+.bubble.show{opacity:1}
+.float{position:absolute; font-family:'Press Start 2P',monospace; font-size:12px; color:#fff; text-shadow:2px 2px 0 #000;
+  animation:floatUp 1.2s ease-out forwards; pointer-events:none}
+@keyframes floatUp{from{transform:translateY(0);opacity:1} to{transform:translateY(-50px);opacity:0}}
+
+.grid{display:grid; grid-template-columns: 1.1fr 1fr; gap:14px; margin-top:14px}
+@media (max-width:760px){ .grid{grid-template-columns:1fr} .scene{height:220px} #tree2{display:none} #expertSprite{left:auto; right:10px}}
+@media (max-width:520px){ #advisorSprite{display:none} #player{left:20px} .table{left:110px} #tree{right:-20px} }
+.crate{display:flex; flex-wrap:wrap; gap:4px; min-height:60px}
+.crate img{width:30px; height:30px}
+.crate .slot{width:30px; height:30px; position:relative}
+.legend{font-size:18px; opacity:.8; margin-top:8px; display:flex; gap:14px; flex-wrap:wrap; align-items:center}
+.legend img{width:18px; height:18px; vertical-align:-3px}
+.count{font-size:28px}
+.notebook ol{margin:0; padding-left:0; list-style:none; max-height:220px; overflow:auto; font-size:20px; line-height:1.15}
+.notebook li{padding:4px 0; border-bottom:2px dashed var(--paper-dark)}
+.notebook li b{color:var(--wood-dark)}
+.actions{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:14px}
+.action{display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 10px; text-align:center}
+.action img{width:40px; height:40px}
+.action .cost{font-size:18px; opacity:.9}
+
+/* dialogue */
+.dialog{position:fixed; left:50%; bottom:16px; transform:translateX(-50%); width:min(920px, calc(100% - 32px)); display:none; z-index:20;
+  grid-template-columns:120px 1fr; gap:14px; align-items:stretch; cursor:pointer}
+.dialog.show{display:grid}
+.dialog .portrait{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:10px}
+.dialog .portrait img{width:84px; height:84px; background:#c7ecff; border:3px solid var(--wood-dark)}
+.dialog .portrait .name{font-size:20px; text-align:center}
+.dialog .text{font-size:26px; line-height:1.15; min-height:110px; position:relative; padding-right:30px}
+.dialog .next{position:absolute; right:14px; bottom:10px; animation:bob .6s infinite alternate; color:var(--red)}
+@keyframes bob{from{transform:translateY(0)} to{transform:translateY(5px)}}
+@media (max-width:520px){ .dialog{grid-template-columns:1fr} .dialog .portrait{flex-direction:row; padding:6px} .dialog .portrait img{width:48px;height:48px} }
+
+/* modal */
+.overlay{position:fixed; inset:0; background:rgba(20,12,4,.55); display:none; align-items:center; justify-content:center; z-index:30; padding:16px}
+.overlay.show{display:flex}
+.modal{width:min(640px,100%); max-height:calc(100vh - 32px); overflow:auto}
+.modal h2{font-size:14px; margin:0 0 12px; color:var(--wood-dark); line-height:1.5}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:10px 0}
+.row.end{justify-content:flex-end}
+.stepper input{width:80px; font-family:'VT323',monospace; font-size:28px; text-align:center; border:3px solid var(--wood-dark); background:#fffbe8; color:var(--ink); border-radius:4px}
+.tray{display:flex; flex-wrap:wrap; gap:4px; margin:10px 0; min-height:40px; padding:8px; background:#e8c97a; border:3px solid var(--wood); border-radius:4px}
+.tray img{width:34px; height:34px}
+.tray img.pop{animation:pop .25s}
+@keyframes pop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+.big{font-size:34px}
+.result{font-size:28px; margin-top:8px}
+
+/* setup */
+.setup{max-width:720px; margin:0 auto}
+.setup .hero{text-align:center; margin-bottom:14px}
+.setup .hero h1{font-size:22px; color:#fff8e0; text-shadow:4px 4px 0 var(--wood-dark); line-height:1.5; margin:10px 0}
+.setup .hero p{color:#fff8e0; text-shadow:2px 2px 0 var(--wood-dark); margin:0}
+.form{display:grid; grid-template-columns:1fr 1fr; gap:10px 18px}
+@media (max-width:560px){ .form{grid-template-columns:1fr} }
+.field label{display:block; font-size:20px; color:var(--wood-dark)}
+.field input,.field select{width:100%; font-family:'VT323',monospace; font-size:24px; padding:4px 8px; border:3px solid var(--wood-dark); border-radius:4px; background:#fffbe8; color:var(--ink)}
+.field .hint{font-size:16px; opacity:.75}
+.seg{display:flex; gap:0}
+.seg button{flex:1; font-family:'VT323',monospace; font-size:22px; padding:4px 0; border:3px solid var(--wood-dark); background:#fffbe8; color:var(--ink); cursor:pointer}
+.seg button+button{border-left:0}
+.seg button.on{background:var(--gold); font-weight:bold}
+details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20px}
+.scroll{white-space:pre-wrap; font-size:21px; line-height:1.2; background:#fffbe8; border:3px dashed var(--wood); padding:10px 12px; border-radius:4px}
+#debug{position:fixed; left:10px; bottom:10px; z-index:40; font-size:18px; padding:8px 12px; display:none; max-width:260px}
+#debug.show{display:block}
+.hidden{display:none !important}
+.diploma{text-align:center}
+.diploma .seal{font-size:48px}
+.stats{display:grid; grid-template-columns:auto auto; gap:2px 16px; justify-content:center; font-size:24px; text-align:left}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ SETUP SCREEN ============ -->
+<section id="screen-setup" class="setup">
+  <div class="hero">
+    <img id="heroApple" class="px" alt="">
+    <h1>ORCHARD LAB<br>PhD SIMULATOR</h1>
+    <p>A sequential decision-making study about practice, demonstrations, and knowing when you're ready.</p>
+  </div>
+  <div class="panel">
+    <h3>NEW GAME SETUP</h3>
+    <div class="form">
+      <div class="field" style="grid-column:1/-1">
+        <label for="f-pid">Participant ID</label>
+        <input id="f-pid" placeholder="e.g. P017" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="f-n">Apples (n)</label>
+        <input id="f-n" type="number" min="1" max="200" step="1">
+      </div>
+      <div class="field">
+        <label for="f-rounds">Rounds (PhD years)</label>
+        <input id="f-rounds" type="number" min="1" max="20" step="1">
+      </div>
+      <div class="field">
+        <label for="f-k">Starting skill k₀</label>
+        <input id="f-k" type="text">
+        <div class="hint">hidden from player · comma list = one per round</div>
+      </div>
+      <div class="field">
+        <label for="f-lr">Learning rate</label>
+        <input id="f-lr" type="text">
+        <div class="hint">hidden from player · comma list = one per round</div>
+      </div>
+      <div class="field">
+        <label>Demonstration boost (× lr)</label>
+        <div class="seg" id="f-demo">
+          <button type="button" data-v="1.5">1.5×</button>
+          <button type="button" data-v="3">3×</button>
+          <button type="button" data-v="off">off</button>
+        </div>
+        <div class="hint">costs 2 apples</div>
+      </div>
+      <div class="field">
+        <label for="f-seed">Random seed</label>
+        <input id="f-seed" type="number" step="1">
+        <div class="hint">same seed = same apple luck (for LLM matching)</div>
+      </div>
+    </div>
+    <details class="researcher" style="margin-top:12px">
+      <summary>Researcher options</summary>
+      <div class="form" style="margin-top:8px">
+        <div class="field">
+          <label for="f-kmax">Max skill (cap)</label>
+          <input id="f-kmax" type="number" min="0" max="1" step="0.05">
+        </div>
+        <div class="field">
+          <label for="f-debug">Show hidden skill (debug)</label>
+          <select id="f-debug"><option value="0">No</option><option value="1">Yes</option></select>
+        </div>
+      </div>
+    </details>
+    <div class="row end" style="margin-top:16px">
+      <button class="btn small" id="btn-link">🔗 Copy participant link</button>
+      <button class="btn small" id="btn-showrules">📜 Preview rules</button>
+      <button class="btn green" id="btn-start">Start game ▶</button>
+    </div>
+    <div id="linkOut" style="font-size:18px; word-break:break-all; opacity:.85"></div>
+  </div>
+</section>
+
+<!-- ============ PLAY SCREEN ============ -->
+<section id="screen-play" class="hidden">
+  <div class="topbar">
+    <div class="title-badge pixel">ORCHARD LAB<br><span id="yearLabel">YEAR 1</span></div>
+    <div class="panel clock">
+      <div class="day" id="clockDay">Fall 1</div>
+      <div class="sub" id="clockSub">Mon · 6:00am</div>
+      <div class="sub">🍎 <span id="clockApples">20</span> apples left</div>
+    </div>
+  </div>
+
+  <div class="scene" id="scene">
+    <div class="cloud" style="top:24px; animation-delay:-10s"></div>
+    <div class="cloud" style="top:56px; animation-delay:-38s; transform:scale(.7)"></div>
+    <div class="grass"></div>
+    <img id="tree2" class="sprite px" alt="">
+    <img id="tree" class="sprite px" alt="">
+    <img id="advisorSprite" class="sprite px" alt="Advisor">
+    <img id="player" class="sprite px" alt="You">
+    <img id="expertSprite" class="sprite px" alt="Expert">
+    <div class="table">
+      <div class="board"></div>
+      <img id="boardItem" class="px" alt="">
+      <img id="knife" class="px" alt="">
+    </div>
+    <div class="bubble" id="bubble"></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>APPLE CRATE</h3>
+      <div><span class="count" id="crateCount">20</span> of <span id="crateTotal">20</span> apples left</div>
+      <div class="crate" id="crate"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="panel notebook">
+      <h3>LAB NOTEBOOK</h3>
+      <ol id="log"></ol>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn action" id="act-practice">
+      <img class="px" id="ic-practice" alt=""><span>Practice cutting</span><span class="cost">uses 1 apple</span>
+    </button>
+    <button class="btn action blue" id="act-eval">
+      <img class="px" id="ic-eval" alt=""><span>Mock review</span><span class="cost">uses N apples you choose</span>
+    </button>
+    <button class="btn action" id="act-demo" style="background:linear-gradient(#b48be0,#7a55a8)">
+      <img class="px" id="ic-demo" alt=""><span>Ask for a demo</span><span class="cost">uses 2 apples</span>
+    </button>
+    <button class="btn action red" id="act-done">
+      <img class="px" id="ic-done" alt=""><span>Defend thesis</span><span class="cost">cut all remaining apples</span>
+    </button>
+  </div>
+  <div class="row end"><button class="btn small" id="btn-rules">📜 Rules</button></div>
+</section>
+
+<!-- ============ FINAL SCREEN ============ -->
+<section id="screen-final" class="hidden">
+  <div class="panel diploma" style="max-width:640px; margin:40px auto">
+    <div class="seal">🎓</div>
+    <h2 class="pixel" style="font-size:16px; line-height:1.6">CONGRATULATIONS,<br>DOCTOR OF APPLE SCIENCE</h2>
+    <div id="finalStats" class="stats"></div>
+    <p>Thank you for taking part! Please let the researcher know you're done.</p>
+    <div class="row" style="justify-content:center">
+      <button class="btn small" id="dl-json">⬇ Data (JSON)</button>
+      <button class="btn small" id="dl-csv">⬇ Data (CSV)</button>
+      <button class="btn small" id="dl-txt">⬇ Text transcript</button>
+    </div>
+    <div id="saveStatus" style="font-size:18px; opacity:.8"></div>
+    <div class="row" style="justify-content:center"><button class="btn green" id="btn-again">New participant</button></div>
+  </div>
+</section>
+</div>
+
+<!-- dialogue box -->
+<div class="dialog" id="dialog">
+  <div class="panel portrait"><img id="dlgPortrait" class="px" alt=""><div class="name" id="dlgName">Prof. Pomme</div></div>
+  <div class="panel text"><span id="dlgText"></span><span class="next" id="dlgNext">▼</span></div>
+</div>
+
+<!-- modal -->
+<div class="overlay" id="overlay"><div class="panel modal" id="modal"></div></div>
+
+<div class="panel" id="debug"></div>
+
+<!-- ================= ENVIRONMENT (pure logic, no DOM) ================= -->
+<script>
+// Same environment can be driven by a human (UI below) or an LLM (window.AppleEnv).
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+class AppleEnv {
+  constructor(params){
+    this.p = Object.assign({n:20, k0:0.1, lr:0.1, kmax:1, demoMult:1.5, demoCost:2, seed:1}, params||{});
+    this.reset();
+  }
+  reset(){
+    const rng = mulberry32(this.p.seed);
+    // Common random numbers: apple i always has the same luck u_i, whatever strategy is used.
+    this.u = Array.from({length:this.p.n}, () => rng());
+    this.idx = 0; this.k = this.p.k0; this.apples = this.p.n; this.t = 0; this.done = false; this.trace = [];
+    return {apples:this.apples, text:this.rulesText()};
+  }
+  get demoEnabled(){ return this.p.demoMult !== null && this.p.demoMult !== 'off' && this.p.demoMult > 0; }
+  _cut(){ const ok = this.u[this.idx] < this.k; this.idx++; this.apples--; return ok; }
+  _burn(c){ this.idx += c; this.apples -= c; }
+  legal(){
+    const a = [];
+    if (this.apples >= 1) a.push('practice', 'review');
+    if (this.demoEnabled && this.apples >= this.p.demoCost) a.push('demo');
+    a.push('defend');
+    return a;
+  }
+  step(action){
+    if (this.done) throw new Error('episode finished');
+    const type = action.type, before = {apples:this.apples, k:this.k}; let obs;
+    if (type === 'practice'){
+      if (this.apples < 1) throw new Error('no apples left');
+      this._burn(1); this.k = Math.min(this.p.kmax, this.k + this.p.lr);
+      obs = {type};
+    } else if (type === 'review'){
+      const m = Math.floor(action.m);
+      if (!(m >= 1 && m <= this.apples)) throw new Error('review size must be 1..'+this.apples);
+      const outcomes = []; for (let i=0;i<m;i++) outcomes.push(this._cut());
+      obs = {type, m, outcomes, clean: outcomes.filter(Boolean).length};
+    } else if (type === 'demo'){
+      if (!this.demoEnabled) throw new Error('demonstrations disabled');
+      if (this.apples < this.p.demoCost) throw new Error('need '+this.p.demoCost+' apples for a demo');
+      this._burn(this.p.demoCost); this.k = Math.min(this.p.kmax, this.k + this.p.demoMult*this.p.lr);
+      obs = {type};
+    } else if (type === 'defend'){
+      const m = this.apples, outcomes = []; for (let i=0;i<m;i++) outcomes.push(this._cut());
+      obs = {type, m, outcomes, clean: outcomes.filter(Boolean).length};
+      this.done = true;
+    } else throw new Error('unknown action '+type);
+    this.t++;
+    const rec = {t:this.t, action:type, m: obs.m ?? (type==='practice'?1: type==='demo'?this.p.demoCost:0),
+      apples_before:before.apples, apples_after:this.apples, k_before:before.k, k_after:this.k,
+      clean: obs.clean ?? null};
+    this.trace.push(rec);
+    return {obs, reward: type==='defend' ? obs.clean : 0, done:this.done, text:this.obsText(obs), record:rec};
+  }
+  rulesText(){
+    const d = this.demoEnabled;
+    return [
+`You are a new PhD student in the Orchard Lab. Your thesis is about cutting apples cleanly.`,
+`You start with ${this.p.n} apples. You have some apple-cutting skill, but you do not know how good you are, and you do not know how fast you learn.`,
+``,
+`Each day you choose ONE action:`,
+`  PRACTICE — practice cutting on 1 apple. Uses 1 apple. Practice improves your skill by an unknown amount. You do not find out whether the practice cut was clean.`,
+`  REVIEW m — a mock review: you cut m apples (1 ≤ m ≤ apples left) and are told how many of the m cuts were clean. Uses m apples. Does not change your skill.`,
+d ? `  DEMO — ask an expert to show you how it's done. The expert uses ${this.p.demoCost} apples. Watching improves your skill by an unknown amount. You do not get a score for the expert's cuts.` : null,
+`  DEFEND — finish training and defend your thesis: you cut ALL of your remaining apples in front of the committee.`,
+``,
+`Your score is the number of clean cuts at your thesis defense. Apples used for practice, reviews${d?', or demos':''} do not count toward your score. Try to get the highest score you can.`
+    ].filter(x=>x!==null).join('\n');
+  }
+  obsText(o){
+    const left = `Apples left: ${this.apples}.`;
+    switch(o.type){
+      case 'practice': return `Day ${this.t}: You practiced cutting on 1 apple. ${left}`;
+      case 'demo':     return `Day ${this.t}: An expert demonstrated cutting on ${this.p.demoCost} apples while you watched. ${left}`;
+      case 'review':   return `Day ${this.t}: Mock review of ${o.m} apple${o.m>1?'s':''}: ${o.clean} of ${o.m} cuts were clean. ${left}`;
+      case 'defend':   return `Day ${this.t}: Thesis defense! You cut ${o.m} apple${o.m===1?'':'s'}: ${o.clean} clean cut${o.clean===1?'':'s'}. Final score: ${o.clean}.`;
+    }
+  }
+  // Reference values for analysis (never shown to the player).
+  oracle(){
+    const {n,k0,lr,kmax,demoMult,demoCost} = this.p; const dm = this.demoEnabled ? demoMult : 0;
+    let best = {ev:-1};
+    for (let d=0; d*demoCost<=n; d++) for (let p=0; p+d*demoCost<=n; p++){
+      const left = n - p - d*demoCost, k = Math.min(kmax, k0 + p*lr + d*dm*lr), ev = left*k;
+      if (ev > best.ev + 1e-12) best = {practice:p, demos:d, ev};
+    }
+    return best;
+  }
+}
+window.AppleEnv = AppleEnv;
+</script>
+
+<!-- ================= UI ================= -->
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- pixel sprites ---------- */
+const PAL = {r:'#d8402f',R:'#ff8a70',d:'#8a1f25',b:'#5b3417',g:'#5dbb4a',c:'#fbe6b0',S:'#4a2c12',
+  k:'#2b2b3a',Y:'#f5c542',h:'#6b4423',s:'#f2c29b',e:'#2b2b3a',p:'#c0574b',G:'#3f8f4a',B:'#3b5ba5',n:'#3a2a1e',
+  w:'#e8e8ee',Q:'#333344',L:'#f4f4f4',l:'#c9ccd6',t:'#c0392b',m:'#c9d1d9',W:'#ffffff',T:'#7a4a24',F:'#3e9b3e',f:'#6cc04a',
+  P:'#7a55a8',V:'#b48be0',o:'#e88a2e',x:'#9aa0a8',u:'#3a6ea8',U:'#9fd0ff'};
+const S = {
+apple:[
+"....bg....",
+"....bgg...",
+".rrrbrrr..",
+"rRRrrrrrr.",
+"rRrrrrrrr.",
+"rrrrrrrrr.",
+"rrrrrrrrd.",
+".rrrrrrd..",
+"..rrdrd..."],
+slice:[
+"..........",
+"..........",
+".rrr..rrr.",
+"rccc..cccr",
+"rcSc..cScr",
+"rccc..cccr",
+".rrr..rrr.",
+".........."],
+squish:[
+"..........",
+"..........",
+"..........",
+".r.rr.r...",
+"rrcrrcrr..",
+"rdrrcrdrr.",
+".ddrrdrd..",
+".........."],
+core:[
+"....b.....",
+"....bg....",
+"...rrr....",
+"....cc....",
+"....cS....",
+"....cc....",
+"...rrr....",
+".........."],
+demoUsed:[
+"..........",
+"...VVVV...",
+"..VccccV..",
+"..VcSScV..",
+"..VccccV..",
+"...VVVV...",
+"..........",
+".........."],
+knife:[
+"..............",
+"mmmmmmmmbbbbbb",
+"WmmmmmmmbbbbbB",
+".WWWWWW.......".replace(/B/g,'b')],
+scroll:[
+".cccccccc.",
+"cbccccccbc",
+".c.hhhh.c.",
+".c......c.",
+".c.hhhh.c.",
+".c.hhh..c.",
+".c......c.",
+"cbccccccbc",
+".cccccccc."],
+cap:[
+"....kkkk....",
+".kkkkkkkkkk.",
+"kkkkkkkkkkkk",
+".kkkkkkkkY..",
+"...kkkkk.Y..",
+".........YY."],
+eye:[
+"..........",
+"...VVVV...",
+".VVWWWWVV.",
+"VVWWPPWWVV",
+"VVWWPPWWVV",
+".VVWWWWVV.",
+"...VVVV...",
+".........."],
+review:[
+"..uuuuuuu.",
+".uUUUUUUu.",
+".uUckkcUu.",
+".uUUUUUUu.",
+".uUckcUUu.",
+".uUUUUUUu.",
+"..uuuuuuu.",
+"....uu....",
+"...uuuu..."],
+player:[
+"....kkkk....",
+".kkkkkkkkkk.",
+"...kkkkkk.Y.",
+"...hhhhhh.Y.",
+"..hssssssh..",
+"..sessssesY.",
+"..ssssssss..",
+"...sspps....",
+"....ssss....",
+"..GGGGGGGG..",
+".sGGGGGGGGs.",
+".sGGGGGGGGs.",
+"..GGGGGGGG..",
+"..BBBBBBBB..",
+"..BBB..BBB..",
+"..BBB..BBB..",
+"..nnn..nnn.."],
+advisor:[
+"...wwwwww...",
+"..wwwwwwww..",
+".wwssssssww.",
+".wssssssssw.",
+".sQQQssQQQs.",
+".sQeQssQeQs.",
+".ssssssssss.",
+".sssswwssss.",
+"..ssswwsss..",
+"...ssssss...",
+".LLLLttLLLL.",
+"LLLLLttLLLLL",
+"LLLLLttLLLLL",
+"LLLLLLLLLLLL",
+".llll..llll.",
+".nnn....nnn."],
+expert:[
+"....oooo....",
+"...oooooo...",
+"..oossssoo..",
+"..ssssssss..",
+"..sesssses..",
+"..ssssssss..",
+"...sspps....",
+"....ssss....",
+"..PPPPPPPP..",
+".sPPVVVVPPs.",
+".sPPPPPPPPs.",
+"..PPPPPPPP..",
+"..kkkkkkkk..",
+"..kkk..kkk..",
+"..kkk..kkk..",
+"..nnn..nnn.."],
+tree:[
+".....FFFFFF.....",
+"...FFfFFFFfFF...",
+"..FFfffFFrFFFF..",
+".FFFffFFFFFFrFF.",
+".FrFFFFFfFFFFFF.",
+"FFFFFFfffFFFFrFF",
+"FFFrFFFFFFFFFFFF",
+".FFFFFFFrFFfFFF.",
+".FFFfFFFFFFFFFF.",
+"..FFFFFrFFFFFF..",
+"....FFFTTFFF....",
+".......TT.......",
+".......TT.......",
+".......TT.......",
+"......TTTT......",
+".....TTTTTT....."]
+};
+const URLS = {};
+function sprite(name){
+  if (URLS[name]) return URLS[name];
+  const rows = S[name], h = rows.length, w = Math.max(...rows.map(r=>r.length));
+  const cv = document.createElement('canvas'); cv.width=w; cv.height=h; const ctx = cv.getContext('2d');
+  rows.forEach((row,y)=>[...row].forEach((ch,x)=>{ if(PAL[ch]){ctx.fillStyle=PAL[ch]; ctx.fillRect(x,y,1,1);} }));
+  return URLS[name] = {url:cv.toDataURL(), w, h};
+}
+function setSprite(el, name, scale){ const s = sprite(name); el.src = s.url; if (scale){ el.style.width = s.w*scale+'px'; el.style.height = s.h*scale+'px'; } }
+function img(name, cls){ const i = document.createElement('img'); i.className = 'px'+(cls?' '+cls:''); i.src = sprite(name).url; i.alt = name; return i; }
+
+/* ---------- config ---------- */
+const qs = new URLSearchParams(location.search);
+const defaults = { pid:'', n:20, rounds:1, k:'0.1', lr:'0.1', demo:'1.5', seed: Math.floor(Math.random()*1e6), kmax:1, debug:'0' };
+const cfgIn = {}; for (const key in defaults) cfgIn[key] = qs.has(key) ? qs.get(key) : defaults[key];
+$('#f-pid').value = cfgIn.pid; $('#f-n').value = cfgIn.n; $('#f-rounds').value = cfgIn.rounds;
+$('#f-k').value = cfgIn.k; $('#f-lr').value = cfgIn.lr; $('#f-seed').value = cfgIn.seed;
+$('#f-kmax').value = cfgIn.kmax; $('#f-debug').value = cfgIn.debug;
+let demoChoice = String(cfgIn.demo);
+function paintSeg(){ document.querySelectorAll('#f-demo button').forEach(b => b.classList.toggle('on', b.dataset.v === demoChoice)); }
+document.querySelectorAll('#f-demo button').forEach(b => b.onclick = () => { demoChoice = b.dataset.v; paintSeg(); });
+paintSeg();
+
+const list = s => String(s).split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+function readConfig(){
+  const c = {
+    pid: $('#f-pid').value.trim() || 'anon-'+Math.random().toString(36).slice(2,8),
+    n: Math.max(1, parseInt($('#f-n').value)||20),
+    rounds: Math.max(1, parseInt($('#f-rounds').value)||1),
+    k: list($('#f-k').value), lr: list($('#f-lr').value),
+    demoMult: demoChoice === 'off' ? null : parseFloat(demoChoice),
+    seed: parseInt($('#f-seed').value) || 1,
+    kmax: Math.min(1, Math.max(0, parseFloat($('#f-kmax').value) || 1)),
+    debug: $('#f-debug').value === '1'
+  };
+  if (!c.k.length) c.k = [0.1]; if (!c.lr.length) c.lr = [0.1];
+  return c;
+}
+function roundParams(c, r){
+  return {n:c.n, k0:c.k[r % c.k.length], lr:c.lr[r % c.lr.length], kmax:c.kmax, demoMult:c.demoMult, demoCost:2, seed:c.seed + r*7919};
+}
+
+/* ---------- state ---------- */
+let CFG, env, round = 0, DATA, crateState, lastReady = 0, busy = false, transcript = [];
+
+/* ---------- dialogue ---------- */
+const dlg = $('#dialog');
+function say(lines, who='advisor'){
+  return new Promise(resolve => {
+    const name = {advisor:'Prof. Pomme', expert:'Dr. Granny Smith', committee:'The Committee', you:'You'}[who];
+    setSprite($('#dlgPortrait'), who==='committee'?'advisor':who==='you'?'player':who); $('#dlgName').textContent = name;
+    let i = 0, typing = false, timer = null, full = '';
+    const show = () => {
+      full = lines[i]; let j = 0; typing = true; $('#dlgNext').style.visibility = 'hidden';
+      const el = $('#dlgText'); el.textContent = '';
+      clearInterval(timer);
+      timer = setInterval(() => { j += 2; el.textContent = full.slice(0,j); if (j >= full.length){ clearInterval(timer); typing=false; $('#dlgNext').style.visibility='visible'; } }, 16);
+    };
+    const adv = () => {
+      if (typing){ clearInterval(timer); $('#dlgText').textContent = full; typing=false; $('#dlgNext').style.visibility='visible'; return; }
+      i++; if (i < lines.length) show(); else { dlg.classList.remove('show'); dlg.onclick = null; document.removeEventListener('keydown', key); resolve(); }
+    };
+    const key = e => { if (e.key===' '||e.key==='Enter'){ e.preventDefault(); adv(); } };
+    dlg.onclick = adv; document.addEventListener('keydown', key);
+    dlg.classList.add('show'); show();
+  });
+}
+
+/* ---------- modal ---------- */
+function modal(html){ $('#modal').innerHTML = html; $('#overlay').classList.add('show'); }
+function closeModal(){ $('#overlay').classList.remove('show'); $('#modal').innerHTML = ''; }
+
+/* ---------- HUD ---------- */
+const SEASONS = ['Spring','Summer','Fall','Winter'], DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function renderHUD(){
+  const d = env.t; const season = SEASONS[(Math.floor(d/28)+2)%4];
+  $('#clockDay').textContent = `${season} ${d%28+1}`;
+  $('#clockSub').textContent = `${DOW[d%7]} · ${6 + (d*3)%12}:00${(6+(d*3)%12)<12?'am':'pm'}`;
+  $('#clockApples').textContent = env.apples;
+  $('#yearLabel').textContent = CFG.rounds>1 ? `YEAR ${round+1} OF ${CFG.rounds}` : 'YEAR 1';
+  $('#crateCount').textContent = env.apples; $('#crateTotal').textContent = env.p.n;
+  const crate = $('#crate'); crate.innerHTML = '';
+  crateState.forEach(s => { const i = img(s); crate.appendChild(i); });
+  const legal = env.legal();
+  $('#act-practice').disabled = busy || !legal.includes('practice');
+  $('#act-eval').disabled = busy || !legal.includes('review');
+  $('#act-demo').disabled = busy || !legal.includes('demo');
+  $('#act-demo').classList.toggle('hidden', !env.demoEnabled);
+  $('#act-done').disabled = busy;
+  if (CFG.debug){ const o = env.oracle(); $('#debug').innerHTML = `<b>DEBUG</b><br>k = ${env.k.toFixed(3)}<br>k₀=${env.p.k0} lr=${env.p.lr} demo=${env.p.demoMult??'off'}<br>EV if defend now: ${(env.apples*env.k).toFixed(2)}<br>oracle: ${o.practice}P + ${o.demos}D → EV ${o.ev.toFixed(2)}<br>seed ${env.p.seed}`; }
+}
+function log(text){
+  const li = document.createElement('li'); const m = text.match(/^(Day \d+:)(.*)$/);
+  if (m){ const b = document.createElement('b'); b.textContent = m[1]; li.append(b, m[2]); } else li.textContent = text;
+  $('#log').prepend(li); transcript.push(text);
+}
+function markCrate(kind, count, outcomes){
+  // crate slots: first `apples` are apples, consumed from the end so the crate visibly drains
+  for (let c=0;c<count;c++){
+    const idx = crateState.lastIndexOf('apple'); if (idx<0) break;
+    crateState[idx] = kind==='review'||kind==='defend' ? (outcomes[c]?'slice':'squish') : kind==='demo' ? 'demoUsed' : 'core';
+  }
+}
+function floatText(txt, x, y){
+  const f = document.createElement('div'); f.className='float'; f.textContent=txt; f.style.left=x+'px'; f.style.top=y+'px';
+  $('#scene').appendChild(f); setTimeout(()=>f.remove(), 1300);
+}
+function bubble(txt, who){
+  const b = $('#bubble'), el = who==='expert'?$('#expertSprite'):who==='advisor'?$('#advisorSprite'):$('#player');
+  b.textContent = txt; b.style.left = Math.max(4, el.offsetLeft - 10)+'px'; b.style.top = Math.max(4, el.offsetTop - 36)+'px';
+  b.classList.add('show'); setTimeout(()=>b.classList.remove('show'), 1400);
+}
+async function chopAnim(who='player'){
+  const p = who==='expert' ? $('#expertSprite') : $('#player'), k = $('#knife');
+  setSprite($('#boardItem'), 'apple', 3);
+  p.classList.remove('chop'); k.classList.remove('slash'); void p.offsetWidth;
+  p.classList.add('chop'); k.classList.add('slash');
+  await sleep(300); setSprite($('#boardItem'), 'slice', 3); await sleep(250);
+}
+
+/* ---------- recording ---------- */
+function record(res, extra){
+  const now = performance.now();
+  DATA.rounds[round].steps.push(Object.assign({}, res.record, {rt_ms: Math.round(now - lastReady), ts: new Date().toISOString(),
+    outcomes: res.obs.outcomes ? res.obs.outcomes.map(Number).join('') : '', text: res.text}, extra||{}));
+}
+function ready(){ busy = false; renderHUD(); lastReady = performance.now(); }
+
+/* ---------- actions ---------- */
+async function doPractice(){
+  busy = true; renderHUD();
+  const res = env.step({type:'practice'}); record(res);
+  await chopAnim(); floatText('+practice', 200, 120);
+  markCrate('practice', 1); log(res.text);
+  bubble(['Hmm…','Okay!','Getting there?','Whoosh!'][env.t%4]);
+  ready();
+}
+async function doDemo(){
+  busy = true; renderHUD();
+  const res = env.step({type:'demo'}); record(res);
+  const ex = $('#expertSprite'); ex.style.display = 'block';
+  bubble('Watch closely!', 'expert');
+  for (let i=0;i<env.p.demoCost;i++){ await chopAnim('expert'); await sleep(150); }
+  ex.style.display = 'none'; floatText('+demo', 200, 120);
+  markCrate('demo', env.p.demoCost); log(res.text);
+  ready();
+}
+async function revealTray(tray, outcomes, maxMs=2600){
+  tray.innerHTML = '';
+  const imgs = outcomes.map(() => { const i = img('apple'); tray.appendChild(i); return i; });
+  const step = Math.max(25, Math.min(160, maxMs / Math.max(1,outcomes.length)));
+  for (let i=0;i<outcomes.length;i++){ await sleep(step); imgs[i].src = sprite(outcomes[i]?'slice':'squish').url; imgs[i].classList.add('pop'); }
+}
+function doEval(){
+  const max = env.apples; let m = Math.min(5, max);
+  modal(`<h2>MOCK REVIEW</h2>
+    <p>Reviewer 2 will watch you cut some apples and tell you how many cuts were clean. Those apples are used up, and a review doesn't improve your skill.</p>
+    <div class="row stepper">How many apples?
+      <button class="btn small" id="m-dec">−</button><input id="m-val" type="number" min="1" max="${max}" value="${m}"><button class="btn small" id="m-inc">+</button>
+      <span style="opacity:.75">(1–${max})</span></div>
+    <div class="row end"><button class="btn small" id="m-cancel">Cancel</button><button class="btn blue" id="m-go">Submit for review</button></div>`);
+  const inp = $('#m-val'), clamp = v => Math.max(1, Math.min(max, Math.floor(v)||1));
+  $('#m-dec').onclick = () => inp.value = clamp(+inp.value - 1);
+  $('#m-inc').onclick = () => inp.value = clamp(+inp.value + 1);
+  $('#m-cancel').onclick = closeModal;
+  $('#m-go').onclick = async () => {
+    const mm = clamp(+inp.value); busy = true; renderHUD();
+    const res = env.step({type:'review', m:mm}); record(res, {review_dialog_ms: Math.round(performance.now()-openT)});
+    modal(`<h2>MOCK REVIEW · ${mm} APPLE${mm>1?'S':''}</h2><div class="tray" id="tray"></div><div class="result" id="rres">&nbsp;</div>
+      <div class="row end"><button class="btn green hidden" id="r-ok">Back to the lab</button></div>`);
+    await revealTray($('#tray'), res.obs.outcomes);
+    $('#rres').innerHTML = `Reviewer 2: <b>${res.obs.clean} of ${mm}</b> cuts were clean.`;
+    markCrate('review', mm, res.obs.outcomes); log(res.text);
+    $('#r-ok').classList.remove('hidden'); $('#r-ok').onclick = () => { closeModal(); ready(); };
+  };
+  const openT = performance.now();
+}
+function doDone(){
+  const left = env.apples;
+  modal(`<h2>DEFEND YOUR THESIS?</h2>
+    <p>You'll cut all <b>${left}</b> remaining apple${left===1?'':'s'} in front of the committee. Your score is the number of clean cuts.</p>
+    <p>After this there's no more practice.</p>
+    <div class="row end"><button class="btn small" id="d-no">Not yet</button><button class="btn red" id="d-yes">Defend!</button></div>`);
+  $('#d-no').onclick = closeModal;
+  $('#d-yes').onclick = async () => {
+    busy = true; renderHUD();
+    const res = env.step({type:'defend'}); record(res);
+    modal(`<h2>THESIS DEFENSE</h2><p>The committee leans forward…</p><div class="tray" id="tray"></div><div class="result big" id="rres">&nbsp;</div>
+      <div class="row end"><button class="btn green hidden" id="r-ok">Continue</button></div>`);
+    if (left > 0) await revealTray($('#tray'), res.obs.outcomes, 3500); else $('#tray').textContent = 'You have no apples left to cut!';
+    $('#rres').innerHTML = `Clean cuts: <b>${res.obs.clean}</b>${left?` / ${left}`:''}`;
+    markCrate('defend', left, res.obs.outcomes); log(res.text);
+    const R = DATA.rounds[round]; const o = env.oracle();
+    R.final = {apples_tested:left, score:res.obs.clean, k_final:env.k, expected_score:left*env.k,
+      oracle_practice:o.practice, oracle_demos:o.demos, oracle_expected:o.ev, days:env.t};
+    R.transcript = transcript.slice();
+    saveLocal();
+    $('#r-ok').classList.remove('hidden'); $('#r-ok').onclick = async () => { closeModal(); await endRound(res.obs.clean, left); };
+  };
+}
+
+/* ---------- flow ---------- */
+function rulesModal(text, onClose){
+  modal(`<h2>📜 RULES OF THE ORCHARD LAB</h2><div class="scroll" id="rulesTxt"></div><div class="row end"><button class="btn green" id="rules-ok">Got it</button></div>`);
+  $('#rulesTxt').textContent = text;
+  $('#rules-ok').onclick = () => { closeModal(); onClose && onClose(); };
+}
+async function startRound(){
+  env = new AppleEnv(roundParams(CFG, round));
+  crateState = Array(env.p.n).fill('apple'); transcript = [env.rulesText()];
+  DATA.rounds[round] = {round: round+1, params: Object.assign({}, env.p), started: new Date().toISOString(), steps: []};
+  $('#log').innerHTML = ''; log(`Day 0: You arrive at the Orchard Lab with ${env.p.n} apples.`);
+  transcript.shift(); transcript.unshift(env.rulesText()); // keep the LLM-equivalent transcript clean
+  busy = true; renderHUD();
+  if (round === 0){
+    await say([
+      `Welcome to the Orchard Lab! I'm Prof. Pomme, your advisor.`,
+      `Your thesis is about cutting apples. We've given you ${env.p.n} apples of funding. Use them wisely!`,
+      `At your thesis defense, you'll cut every apple you have left in front of the committee. Each clean cut counts toward your score.`,
+      `You can practice to get better, ask Reviewer 2 for a mock review to see how you're doing${env.demoEnabled?', or ask Dr. Granny Smith for a demonstration':''}. All of these use up apples.`,
+      `Nobody knows how good you are yet, not even you. Here are the official rules.`
+    ]);
+  } else {
+    await say([`Year ${round+1}! A fresh crate of ${env.p.n} apples, and a new knife to get used to.`, `Your skill starts over this year, and it may be different from last year. Good luck!`]);
+  }
+  await new Promise(r => rulesModal(env.rulesText(), r));
+  ready();
+}
+async function endRound(score, left){
+  if (round+1 < CFG.rounds){
+    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. The committee is… satisfied. On to the next year!`], 'committee');
+    round++; await startRound();
+  } else {
+    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. Congratulations, Doctor!`], 'committee');
+    finish();
+  }
+}
+function finish(){
+  DATA.finished = new Date().toISOString();
+  $('#screen-play').classList.add('hidden'); $('#screen-final').classList.remove('hidden'); $('#debug').classList.remove('show');
+  const tot = DATA.rounds.reduce((a,r)=>a+r.final.score,0);
+  $('#finalStats').innerHTML = DATA.rounds.map(r=>`<span>Year ${r.round}</span><span><b>${r.final.score}</b> clean cuts</span>`).join('') +
+    (DATA.rounds.length>1?`<span>Total</span><span><b>${tot}</b></span>`:'');
+  saveLocal(); postData();
+}
+function saveLocal(){ try { localStorage.setItem('orchard:'+DATA.pid+':'+DATA.started, JSON.stringify(DATA)); } catch(e){} }
+async function postData(){
+  try {
+    const r = await fetch('save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(DATA)});
+    $('#saveStatus').textContent = r.ok ? '✓ Saved to server.' : 'Server save unavailable; please download the data.';
+  } catch(e){ $('#saveStatus').textContent = 'Server save unavailable; please download the data.'; }
+}
+function download(name, text, type){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
+function toCSV(){
+  const cols = ['pid','round','n','k0','lr','kmax','demoMult','seed','t','action','m','apples_before','apples_after','k_before','k_after','clean','outcomes','rt_ms','ts'];
+  const rows = [cols.join(',')];
+  DATA.rounds.forEach(R => R.steps.forEach(s => rows.push(cols.map(c => {
+    const v = c==='pid'?DATA.pid : c==='round'?R.round : (c in R.params && !(c in s)) ? R.params[c] : s[c];
+    return v==null?'':String(v).includes(',')?`"${v}"`:v; }).join(','))));
+  return rows.join('\n');
+}
+
+$('#act-practice').onclick = () => !busy && doPractice();
+$('#act-demo').onclick = () => !busy && doDemo();
+$('#act-eval').onclick = () => !busy && doEval();
+$('#act-done').onclick = () => !busy && doDone();
+$('#btn-rules').onclick = () => rulesModal(env.rulesText());
+$('#btn-showrules').onclick = () => { const c = readConfig(); rulesModal(new AppleEnv(roundParams(c,0)).rulesText()); };
+$('#btn-link').onclick = async () => {
+  const c = readConfig(), u = new URL(location.href.split('?')[0]);
+  const q = {n:c.n, rounds:c.rounds, k:c.k.join(','), lr:c.lr.join(','), demo:demoChoice, seed:$('#f-seed').value, kmax:c.kmax, go:1};
+  if ($('#f-pid').value.trim()) q.pid = $('#f-pid').value.trim();
+  for (const key in q) u.searchParams.set(key, q[key]);
+  try { await navigator.clipboard.writeText(u.href); $('#linkOut').textContent = 'Copied: ' + u.href; }
+  catch(e){ $('#linkOut').textContent = u.href; }
+};
+$('#btn-start').onclick = () => {
+  CFG = readConfig(); round = 0;
+  DATA = {pid: CFG.pid, started: new Date().toISOString(), userAgent: navigator.userAgent, config: CFG, rounds: []};
+  $('#screen-setup').classList.add('hidden'); $('#screen-play').classList.remove('hidden');
+  $('#debug').classList.toggle('show', CFG.debug);
+  startRound();
+};
+$('#dl-json').onclick = () => download(`orchard_${DATA.pid}.json`, JSON.stringify(DATA, null, 2), 'application/json');
+$('#dl-csv').onclick = () => download(`orchard_${DATA.pid}.csv`, toCSV(), 'text/csv');
+$('#dl-txt').onclick = () => download(`orchard_${DATA.pid}.txt`, DATA.rounds.map(r => `=== Year ${r.round} ===\n` + r.transcript.join('\n')).join('\n\n'), 'text/plain');
+$('#btn-again').onclick = () => { $('#screen-final').classList.add('hidden'); $('#screen-setup').classList.remove('hidden'); $('#f-pid').value=''; $('#f-seed').value = Math.floor(Math.random()*1e6); };
+
+/* ---------- static sprites ---------- */
+setSprite($('#heroApple'), 'apple', 8);
+setSprite($('#tree'), 'tree', 10); setSprite($('#tree2'), 'tree', 7);
+setSprite($('#player'), 'player', 6); setSprite($('#advisorSprite'), 'advisor', 6); setSprite($('#expertSprite'), 'expert', 6);
+setSprite($('#knife'), 'knife', 3); setSprite($('#boardItem'), 'apple', 3);
+['practice:knife','eval:review','demo:eye','done:cap'].forEach(x => { const [a,s] = x.split(':'); $('#ic-'+a).src = sprite(s).url; });
+$('#legend').innerHTML = '';
+[['apple','unused'],['core','practiced'],['demoUsed','demo'],['slice','clean cut'],['squish','messy cut']].forEach(([s,t]) => {
+  const span = document.createElement('span'); span.append(img(s), ' '+t); $('#legend').appendChild(span); });
+// ?go=1 skips the setup screen so participants never see the hidden parameters.
+if (qs.get('go') === '1'){
+  $('#screen-setup').classList.add('hidden');
+  if (!qs.get('pid')){
+    modal(`<h2>WELCOME TO THE ORCHARD LAB</h2><div class="field"><label for="g-pid">Your participant ID</label><input id="g-pid" autocomplete="off"></div><div class="row end"><button class="btn green" id="g-go">Begin ▶</button></div>`);
+    $('#g-go').onclick = () => { $('#f-pid').value = $('#g-pid').value.trim(); closeModal(); $('#btn-start').click(); };
+  } else $('#btn-start').click();
+}
+})();
+</script>
+</body>
+</html>
