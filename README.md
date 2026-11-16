@@ -4,6 +4,8 @@ A cute, Stardew-style browser game for studying **sequential decision-making und
 
 Part of a Computational Models of Cognition final project (Josh Roy & Samuel M. Bateman).
 
+**Play it:** https://joshnroy.github.io/orchard-lab/. This static copy can't save to a server, so participants should download their data at the end. Run `server.py` for automatic saving.
+
 ## The task
 
 You're a PhD student with `n` apples. You have a hidden cutting skill `k` (the probability that a cut is clean) and a hidden learning rate `lr`. Each day you pick one action:
