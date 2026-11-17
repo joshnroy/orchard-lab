@@ -114,3 +114,21 @@ Options:
 - `--objective score` (default): maximize expected clean cuts at the defense, which is the game's score.
 - `--objective perfect [--min-defend M]`: maximize the probability that every apple at the defense is clean, defending at least M apples.
 - `--k0-grid`, `--lr-grid`, `--demo-grid`: set the prior. The default is uniform over k0 ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2}, demo× ∈ {1.5, 3}. Results depend on this prior.
+
+## LLM players
+
+`agents/` has two LLM players, adapted from [robocode](https://github.com/tomsilver/robocode). Both see the same text a human sees, and both save logs in the browser's format, so `solver/pomdp.py analyze` works on them. `agents/apple_env.py` is a Python version of the game that produces exactly the browser's random draws, so a seed gives an LLM the same apple luck a human had.
+
+```bash
+# LLM only: one `claude -p` call per game day, all tools disabled, empty system prompt
+python3 agents/llm_player.py --seed 381892 --model claude-opus-5-5 [--thinking 8000]
+
+# Coding agent: Claude Code with shell and file tools, acting through `python3 play.py <action>`
+python3 agents/agent_player.py --seed 381892 --model claude-opus-5-5 [--effort high] [--budget 5]
+```
+
+Both take the game settings as options: `--n --k0 --lr --demo --rounds --seed`; comma lists give one value per round. Both need the `claude` CLI logged in (`claude auth login`). They clear the environment before calling it, so they also work when launched from inside Claude Code.
+
+The coding agent runs in a bubblewrap sandbox. It sees an empty home with only its work directory, read-only system directories and Python. The hidden parameters live only in `agents/game_server.py`'s memory, which is outside the sandbox and in a separate PID namespace. Run transcripts go to `agents/runs/` (git-ignored).
+
+First results: [analysis/llm_vs_humans.md](analysis/llm_vs_humans.md).
