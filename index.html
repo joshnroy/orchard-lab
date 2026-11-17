@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Orchard Lab PhD</title>
+<title>Orchard Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
@@ -161,25 +161,22 @@ details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20p
 <div class="wrap">
 
 <!-- ============ SETUP SCREEN ============ -->
-<section id="screen-setup" class="setup">
+<section id="screen-setup" class="setup hidden">
   <div class="hero">
     <img id="heroApple" class="px" alt="">
-    <h1>ORCHARD LAB<br>PhD SIMULATOR</h1>
+    <h1>ORCHARD LAB</h1>
     <p>A sequential decision-making study about practice, demonstrations, and knowing when you're ready.</p>
   </div>
   <div class="panel">
-    <h3>NEW GAME SETUP</h3>
+    <h3>RESEARCHER SETUP</h3>
+    <p style="margin:0 0 10px; opacity:.85">Only for testing. Participants open the plain link, which uses the study settings in <code>STUDY</code> (index.html) and never shows them. Each game gets a random ID.</p>
     <div class="form">
-      <div class="field" style="grid-column:1/-1">
-        <label for="f-pid">Participant ID</label>
-        <input id="f-pid" placeholder="e.g. P017" autocomplete="off">
-      </div>
       <div class="field">
         <label for="f-n">Apples (n)</label>
         <input id="f-n" type="number" min="1" max="200" step="1">
       </div>
       <div class="field">
-        <label for="f-rounds">Rounds (PhD years)</label>
+        <label for="f-rounds">Rounds</label>
         <input id="f-rounds" type="number" min="1" max="20" step="1">
       </div>
       <div class="field">
@@ -221,11 +218,9 @@ details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20p
       </div>
     </details>
     <div class="row end" style="margin-top:16px">
-      <button class="btn small" id="btn-link">🔗 Copy participant link</button>
       <button class="btn small" id="btn-showrules">📜 Preview rules</button>
       <button class="btn green" id="btn-start">Start game ▶</button>
     </div>
-    <div id="linkOut" style="font-size:18px; word-break:break-all; opacity:.85"></div>
   </div>
 </section>
 
@@ -246,7 +241,7 @@ details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20p
     <div class="grass"></div>
     <img id="tree2" class="sprite px" alt="">
     <img id="tree" class="sprite px" alt="">
-    <img id="advisorSprite" class="sprite px" alt="Advisor">
+    <img id="advisorSprite" class="sprite px" alt="Mentor">
     <img id="player" class="sprite px" alt="You">
     <img id="expertSprite" class="sprite px" alt="Expert">
     <div class="table">
@@ -281,7 +276,7 @@ details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20p
       <img class="px" id="ic-demo" alt=""><span>Ask for a demo</span><span class="cost">uses 2 apples</span>
     </button>
     <button class="btn action red" id="act-done">
-      <img class="px" id="ic-done" alt=""><span>Defend thesis</span><span class="cost">cut all remaining apples</span>
+      <img class="px" id="ic-done" alt=""><span>Final test</span><span class="cost">cut all remaining apples</span>
     </button>
   </div>
   <div class="row end"><button class="btn small" id="btn-rules">📜 Rules</button></div>
@@ -290,8 +285,8 @@ details.researcher summary{cursor:pointer; color:var(--wood-dark); font-size:20p
 <!-- ============ FINAL SCREEN ============ -->
 <section id="screen-final" class="hidden">
   <div class="panel diploma" style="max-width:640px; margin:40px auto">
-    <div class="seal">🎓</div>
-    <h2 class="pixel" style="font-size:16px; line-height:1.6">CONGRATULATIONS,<br>DOCTOR OF APPLE SCIENCE</h2>
+    <div class="seal">🍎</div>
+    <h2 class="pixel" style="font-size:16px; line-height:1.6">ALL DONE.<br>THANKS FOR PLAYING!</h2>
     <div id="finalStats" class="stats"></div>
     <p>Thank you for taking part! Please let the researcher know you're done.</p>
     <div class="row" style="justify-content:center">
@@ -375,16 +370,16 @@ class AppleEnv {
   rulesText(){
     const d = this.demoEnabled;
     return [
-`You are a new PhD student in the Orchard Lab. Your thesis is about cutting apples cleanly.`,
+`You are a new apprentice in the Orchard Lab, learning to cut apples cleanly.`,
 `You start with ${this.p.n} apples. You have some apple-cutting skill, but you do not know how good you are, and you do not know how fast you learn.`,
 ``,
 `Each day you choose ONE action:`,
 `  PRACTICE — practice cutting on 1 apple. Uses 1 apple. Practice improves your skill by an unknown amount. You do not find out whether the practice cut was clean.`,
 `  REVIEW m — a mock review: you cut m apples (1 ≤ m ≤ apples left) and are told how many of the m cuts were clean. Uses m apples. Does not change your skill.`,
 d ? `  DEMO — ask an expert to show you how it's done. The expert uses ${this.p.demoCost} apples. Watching improves your skill by an unknown amount. You do not get a score for the expert's cuts.` : null,
-`  DEFEND — finish training and defend your thesis: you cut ALL of your remaining apples in front of the committee.`,
+`  DEFEND — finish training and take the final test: you cut ALL of your remaining apples.`,
 ``,
-`Your score is the number of clean cuts at your thesis defense. Apples used for practice, reviews${d?', or demos':''} do not count toward your score. Try to get the highest score you can.`
+`Your score is the number of clean cuts in the final test. Apples used for practice, reviews${d?', or demos':''} do not count toward your score. Try to get the highest score you can.`
     ].filter(x=>x!==null).join('\n');
   }
   obsText(o){
@@ -393,7 +388,7 @@ d ? `  DEMO — ask an expert to show you how it's done. The expert uses ${this.
       case 'practice': return `Day ${this.t}: You practiced cutting on 1 apple. ${left}`;
       case 'demo':     return `Day ${this.t}: An expert demonstrated cutting on ${this.p.demoCost} apples while you watched. ${left}`;
       case 'review':   return `Day ${this.t}: Mock review of ${o.m} apple${o.m>1?'s':''}: ${o.clean} of ${o.m} cuts were clean. ${left}`;
-      case 'defend':   return `Day ${this.t}: Thesis defense! You cut ${o.m} apple${o.m===1?'':'s'}: ${o.clean} clean cut${o.clean===1?'':'s'}. Final score: ${o.clean}.`;
+      case 'defend':   return `Day ${this.t}: Final test! You cut ${o.m} apple${o.m===1?'':'s'}: ${o.clean} clean cut${o.clean===1?'':'s'}. Final score: ${o.clean}.`;
     }
   }
   // Reference values for analysis (never shown to the player).
@@ -510,12 +505,12 @@ review:[
 "....uu....",
 "...uuuu..."],
 player:[
-"....kkkk....",
-".kkkkkkkkkk.",
-"...kkkkkk.Y.",
-"...hhhhhh.Y.",
+"....YYYY....",
+"...YYYYYY...",
+".YYooooooYY.",
+"...hhhhhh...",
 "..hssssssh..",
-"..sessssesY.",
+"..sesssses..",
 "..ssssssss..",
 "...sspps....",
 "....ssss....",
@@ -592,9 +587,15 @@ function img(name, cls){ const i = document.createElement('img'); i.className = 
 
 /* ---------- config ---------- */
 const qs = new URLSearchParams(location.search);
-const defaults = { pid:'', n:20, rounds:1, k:'0.1', lr:'0.1', demo:'1.5', seed: Math.floor(Math.random()*1e6), kmax:1, debug:'0' };
-const cfgIn = {}; for (const key in defaults) cfgIn[key] = qs.has(key) ? qs.get(key) : defaults[key];
-$('#f-pid').value = cfgIn.pid; $('#f-n').value = cfgIn.n; $('#f-rounds').value = cfgIn.rounds;
+// Study settings for participants. They are never shown on screen, and URL
+// parameters can't change them; only the researcher setup (?setup=1) reads the URL.
+const STUDY = { n:20, rounds:1, k:'0.1', lr:'0.1', demo:'1.5', kmax:1 };
+const RESEARCHER = qs.get('setup') === '1';
+// Anonymous participant ID: random hex. The start time is recorded separately.
+function newPid(){ const b = new Uint8Array(6); crypto.getRandomValues(b); return 'p_' + Array.from(b, x => x.toString(16).padStart(2,'0')).join(''); }
+const defaults = Object.assign({}, STUDY, { seed: Math.floor(Math.random()*1e6), debug:'0' });
+const cfgIn = {}; for (const key in defaults) cfgIn[key] = RESEARCHER && qs.has(key) ? qs.get(key) : defaults[key];
+$('#f-n').value = cfgIn.n; $('#f-rounds').value = cfgIn.rounds;
 $('#f-k').value = cfgIn.k; $('#f-lr').value = cfgIn.lr; $('#f-seed').value = cfgIn.seed;
 $('#f-kmax').value = cfgIn.kmax; $('#f-debug').value = cfgIn.debug;
 let demoChoice = String(cfgIn.demo);
@@ -605,14 +606,14 @@ paintSeg();
 const list = s => String(s).split(',').map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
 function readConfig(){
   const c = {
-    pid: $('#f-pid').value.trim() || 'anon-'+Math.random().toString(36).slice(2,8),
+    pid: newPid(),
     n: Math.max(1, parseInt($('#f-n').value)||20),
     rounds: Math.max(1, parseInt($('#f-rounds').value)||1),
     k: list($('#f-k').value), lr: list($('#f-lr').value),
     demoMult: demoChoice === 'off' ? null : parseFloat(demoChoice),
     seed: parseInt($('#f-seed').value) || 1,
     kmax: Math.min(1, Math.max(0, parseFloat($('#f-kmax').value) || 1)),
-    debug: $('#f-debug').value === '1'
+    debug: RESEARCHER && $('#f-debug').value === '1'
   };
   if (!c.k.length) c.k = [0.1]; if (!c.lr.length) c.lr = [0.1];
   return c;
@@ -628,7 +629,7 @@ let CFG, env, round = 0, DATA, crateState, lastReady = 0, busy = false, transcri
 const dlg = $('#dialog');
 function say(lines, who='advisor'){
   return new Promise(resolve => {
-    const name = {advisor:'Prof. Pomme', expert:'Dr. Granny Smith', committee:'The Committee', you:'You'}[who];
+    const name = {advisor:'Prof. Pomme', expert:'Dr. Granny Smith', committee:'The Judges', you:'You'}[who];
     setSprite($('#dlgPortrait'), who==='committee'?'advisor':who==='you'?'player':who); $('#dlgName').textContent = name;
     let i = 0, typing = false, timer = null, full = '';
     const show = () => {
@@ -735,7 +736,7 @@ async function revealTray(tray, outcomes, maxMs=2600){
 function doEval(){
   const max = env.apples; let m = Math.min(5, max);
   modal(`<h2>MOCK REVIEW</h2>
-    <p>Reviewer 2 will watch you cut some apples and tell you how many cuts were clean. Those apples are used up, and a review doesn't improve your skill.</p>
+    <p>A reviewer will watch you cut some apples and tell you how many cuts were clean. Those apples are used up, and a review doesn't improve your skill.</p>
     <div class="row stepper">How many apples?
       <button class="btn small" id="m-dec">−</button><input id="m-val" type="number" min="1" max="${max}" value="${m}"><button class="btn small" id="m-inc">+</button>
       <span style="opacity:.75">(1–${max})</span></div>
@@ -750,7 +751,7 @@ function doEval(){
     modal(`<h2>MOCK REVIEW · ${mm} APPLE${mm>1?'S':''}</h2><div class="tray" id="tray"></div><div class="result" id="rres">&nbsp;</div>
       <div class="row end"><button class="btn green hidden" id="r-ok">Back to the lab</button></div>`);
     await revealTray($('#tray'), res.obs.outcomes);
-    $('#rres').innerHTML = `Reviewer 2: <b>${res.obs.clean} of ${mm}</b> cuts were clean.`;
+    $('#rres').innerHTML = `Reviewer: <b>${res.obs.clean} of ${mm}</b> cuts were clean.`;
     markCrate('review', mm, res.obs.outcomes); log(res.text);
     $('#r-ok').classList.remove('hidden'); $('#r-ok').onclick = () => { closeModal(); ready(); };
   };
@@ -758,15 +759,15 @@ function doEval(){
 }
 function doDone(){
   const left = env.apples;
-  modal(`<h2>DEFEND YOUR THESIS?</h2>
-    <p>You'll cut all <b>${left}</b> remaining apple${left===1?'':'s'} in front of the committee. Your score is the number of clean cuts.</p>
+  modal(`<h2>TAKE THE FINAL TEST?</h2>
+    <p>You'll cut all <b>${left}</b> remaining apple${left===1?'':'s'} in front of the judges. Your score is the number of clean cuts.</p>
     <p>After this there's no more practice.</p>
-    <div class="row end"><button class="btn small" id="d-no">Not yet</button><button class="btn red" id="d-yes">Defend!</button></div>`);
+    <div class="row end"><button class="btn small" id="d-no">Not yet</button><button class="btn red" id="d-yes">Start the test!</button></div>`);
   $('#d-no').onclick = closeModal;
   $('#d-yes').onclick = async () => {
     busy = true; renderHUD();
     const res = env.step({type:'defend'}); record(res);
-    modal(`<h2>THESIS DEFENSE</h2><p>The committee leans forward…</p><div class="tray" id="tray"></div><div class="result big" id="rres">&nbsp;</div>
+    modal(`<h2>FINAL TEST</h2><p>The judges lean forward…</p><div class="tray" id="tray"></div><div class="result big" id="rres">&nbsp;</div>
       <div class="row end"><button class="btn green hidden" id="r-ok">Continue</button></div>`);
     if (left > 0) await revealTray($('#tray'), res.obs.outcomes, 3500); else $('#tray').textContent = 'You have no apples left to cut!';
     $('#rres').innerHTML = `Clean cuts: <b>${res.obs.clean}</b>${left?` / ${left}`:''}`;
@@ -795,10 +796,10 @@ async function startRound(){
   busy = true; renderHUD();
   if (round === 0){
     await say([
-      `Welcome to the Orchard Lab! I'm Prof. Pomme, your advisor.`,
-      `Your thesis is about cutting apples. We've given you ${env.p.n} apples of funding. Use them wisely!`,
-      `At your thesis defense, you'll cut every apple you have left in front of the committee. Each clean cut counts toward your score.`,
-      `You can practice to get better, ask Reviewer 2 for a mock review to see how you're doing${env.demoEnabled?', or ask Dr. Granny Smith for a demonstration':''}. All of these use up apples.`,
+      `Welcome to the Orchard Lab! I'm Prof. Pomme, your mentor.`,
+      `You're here to learn to cut apples cleanly. We've given you ${env.p.n} apples. Use them wisely!`,
+      `In the final test, you'll cut every apple you have left in front of the judges. Each clean cut counts toward your score.`,
+      `You can practice to get better, ask for a mock review to see how you're doing${env.demoEnabled?', or ask Dr. Granny Smith for a demonstration':''}. All of these use up apples.`,
       `Nobody knows how good you are yet, not even you. Here are the official rules.`
     ]);
   } else {
@@ -809,10 +810,10 @@ async function startRound(){
 }
 async function endRound(score, left){
   if (round+1 < CFG.rounds){
-    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. The committee is… satisfied. On to the next year!`], 'committee');
+    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. The judges are… satisfied. On to the next year!`], 'committee');
     round++; await startRound();
   } else {
-    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. Congratulations, Doctor!`], 'committee');
+    await say([`${score} clean cut${score===1?'':'s'}${left?` out of ${left}`:''}. Well done!`], 'committee');
     finish();
   }
 }
@@ -847,17 +848,9 @@ $('#act-eval').onclick = () => !busy && doEval();
 $('#act-done').onclick = () => !busy && doDone();
 $('#btn-rules').onclick = () => rulesModal(env.rulesText());
 $('#btn-showrules').onclick = () => { const c = readConfig(); rulesModal(new AppleEnv(roundParams(c,0)).rulesText()); };
-$('#btn-link').onclick = async () => {
-  const c = readConfig(), u = new URL(location.href.split('?')[0]);
-  const q = {n:c.n, rounds:c.rounds, k:c.k.join(','), lr:c.lr.join(','), demo:demoChoice, seed:$('#f-seed').value, kmax:c.kmax, go:1};
-  if ($('#f-pid').value.trim()) q.pid = $('#f-pid').value.trim();
-  for (const key in q) u.searchParams.set(key, q[key]);
-  try { await navigator.clipboard.writeText(u.href); $('#linkOut').textContent = 'Copied: ' + u.href; }
-  catch(e){ $('#linkOut').textContent = u.href; }
-};
 $('#btn-start').onclick = () => {
   CFG = readConfig(); round = 0;
-  DATA = {pid: CFG.pid, started: new Date().toISOString(), userAgent: navigator.userAgent, config: CFG, rounds: []};
+  DATA = {pid: CFG.pid, mode: RESEARCHER ? 'researcher' : 'participant', started: new Date().toISOString(), userAgent: navigator.userAgent, config: CFG, rounds: []};
   $('#screen-setup').classList.add('hidden'); $('#screen-play').classList.remove('hidden');
   $('#debug').classList.toggle('show', CFG.debug);
   startRound();
@@ -865,25 +858,21 @@ $('#btn-start').onclick = () => {
 $('#dl-json').onclick = () => download(`orchard_${DATA.pid}.json`, JSON.stringify(DATA, null, 2), 'application/json');
 $('#dl-csv').onclick = () => download(`orchard_${DATA.pid}.csv`, toCSV(), 'text/csv');
 $('#dl-txt').onclick = () => download(`orchard_${DATA.pid}.txt`, DATA.rounds.map(r => `=== Year ${r.round} ===\n` + r.transcript.join('\n')).join('\n\n'), 'text/plain');
-$('#btn-again').onclick = () => { $('#screen-final').classList.add('hidden'); $('#screen-setup').classList.remove('hidden'); $('#f-pid').value=''; $('#f-seed').value = Math.floor(Math.random()*1e6); };
+$('#btn-again').classList.toggle('hidden', !RESEARCHER);
+$('#btn-again').onclick = () => { $('#screen-final').classList.add('hidden'); $('#screen-setup').classList.remove('hidden'); $('#f-seed').value = Math.floor(Math.random()*1e6); };
 
 /* ---------- static sprites ---------- */
 setSprite($('#heroApple'), 'apple', 8);
 setSprite($('#tree'), 'tree', 10); setSprite($('#tree2'), 'tree', 7);
 setSprite($('#player'), 'player', 6); setSprite($('#advisorSprite'), 'advisor', 6); setSprite($('#expertSprite'), 'expert', 6);
 setSprite($('#knife'), 'knife', 3); setSprite($('#boardItem'), 'apple', 3);
-['practice:knife','eval:review','demo:eye','done:cap'].forEach(x => { const [a,s] = x.split(':'); $('#ic-'+a).src = sprite(s).url; });
+['practice:knife','eval:review','demo:eye','done:slice'].forEach(x => { const [a,s] = x.split(':'); $('#ic-'+a).src = sprite(s).url; });
 $('#legend').innerHTML = '';
 [['apple','unused'],['core','practiced'],['demoUsed','demo'],['slice','clean cut'],['squish','messy cut']].forEach(([s,t]) => {
   const span = document.createElement('span'); span.append(img(s), ' '+t); $('#legend').appendChild(span); });
-// ?go=1 skips the setup screen so participants never see the hidden parameters.
-if (qs.get('go') === '1'){
-  $('#screen-setup').classList.add('hidden');
-  if (!qs.get('pid')){
-    modal(`<h2>WELCOME TO THE ORCHARD LAB</h2><div class="field"><label for="g-pid">Your participant ID</label><input id="g-pid" autocomplete="off"></div><div class="row end"><button class="btn green" id="g-go">Begin ▶</button></div>`);
-    $('#g-go').onclick = () => { $('#f-pid').value = $('#g-pid').value.trim(); closeModal(); $('#btn-start').click(); };
-  } else $('#btn-start').click();
-}
+// Participants go straight into the game; ?setup=1 opens the researcher setup screen.
+if (RESEARCHER) $('#screen-setup').classList.remove('hidden');
+else $('#btn-start').click();
 })();
 </script>
 </body>

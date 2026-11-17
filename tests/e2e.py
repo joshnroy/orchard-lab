@@ -14,7 +14,7 @@ errors = []
 
 
 def clear_dialog(page):
-    """Click through the advisor's dialogue until it closes."""
+    """Click through the mentor's dialogue until it closes."""
     for _ in range(40):
         if not page.is_visible("#dialog"):
             return
@@ -45,8 +45,7 @@ with sync_playwright() as p:
     page.on("pageerror", lambda e: errors.append(str(e)))
 
     before = set(glob.glob(os.path.join(DATA_DIR, "*.json")))
-    page.goto(BASE + "/?debug=1")
-    page.fill("#f-pid", "e2e-test")
+    page.goto(BASE + "/?setup=1&debug=1")
     page.fill("#f-n", "20")
     page.fill("#f-rounds", "2")
     page.fill("#f-k", "0.1, 0.3")
@@ -88,6 +87,7 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelector('#saveStatus').textContent.length > 0")
     status = page.inner_text("#saveStatus")
     assert "Saved" in status, status
+    assert page.is_visible("#btn-again")  # researcher mode can start another game
     page.screenshot(path=f"{SHOTS}/05_final.png", full_page=True)
     with page.expect_download() as d:
         page.click("#dl-csv")
@@ -99,6 +99,7 @@ with sync_playwright() as p:
     saved = json.load(open(sorted(new)[-1]))
     r1, r2 = saved["rounds"]
     assert [s["action"] for s in r1["steps"]] == ["practice", "demo", "review", "defend"]
+    assert saved["pid"].startswith("p_") and len(saved["pid"]) == 14 and saved["started"], saved["pid"]
     assert r1["final"]["apples_tested"] == 14 and r2["final"]["apples_tested"] == 20
     for f in new:
         os.remove(f)  # don't leave test data behind
@@ -106,20 +107,30 @@ with sync_playwright() as p:
     # ---- phone layout: no horizontal scroll
     m = browser.new_page(viewport={"width": 390, "height": 844})
     m.goto(BASE + "/")
-    m.click("#btn-start"); clear_dialog(m); close_rules(m); wait_ready(m)
+    clear_dialog(m); close_rules(m); wait_ready(m)
     overflow = m.evaluate("document.documentElement.scrollWidth - innerWidth")
     m.screenshot(path=f"{SHOTS}/06_mobile.png", full_page=True)
     assert overflow <= 0, f"horizontal overflow {overflow}px on phone"
 
-    # ---- participant link (?go=1): setup screen skipped, asks for ID, params applied
+    # ---- participant mode (plain URL): no setup screen, URL can't change the study settings
     g = browser.new_page(viewport={"width": 1100, "height": 900})
-    g.goto(BASE + "/?n=12&k=0.2&lr=0.05&demo=off&go=1")
+    g.goto(BASE + "/?n=12&k=0.9&demo=off&debug=1")
     assert not g.is_visible("#screen-setup")
-    g.fill("#g-pid", "linktest"); g.click("#g-go")
-    clear_dialog(g); close_rules_text = g.inner_text("#rulesTxt")
-    assert "DEMO" not in close_rules_text and "12 apples" in close_rules_text
+    clear_dialog(g); rules = g.inner_text("#rulesTxt")
+    assert "DEMO" in rules and "20 apples" in rules and "PhD" not in rules and "thesis" not in rules, rules
     g.click("#rules-ok"); wait_ready(g)
-    assert apples(g) == 12 and not g.is_visible("#act-demo") and not g.is_visible("#debug")
+    assert apples(g) == 20 and g.is_visible("#act-demo") and not g.is_visible("#debug")
+    assert "PhD" not in g.content() and "thesis" not in g.inner_text("body").lower()
+    g.click("#act-done"); g.click("#d-yes")
+    g.wait_for_selector("#r-ok:not(.hidden)", timeout=10000); g.click("#r-ok"); clear_dialog(g)
+    g.wait_for_selector("#screen-final:not(.hidden)")
+    assert not g.is_visible("#btn-again")
+    g.wait_for_function("document.querySelector('#saveStatus').textContent.length > 0")
+    new = set(glob.glob(os.path.join(DATA_DIR, "*.json"))) - before
+    for f in new:
+        d = json.load(open(f))
+        assert d["pid"].startswith("p_") and d["mode"] == "participant" and d["rounds"][0]["params"]["k0"] == 0.1
+        os.remove(f)
     browser.close()
 
 assert not errors, errors

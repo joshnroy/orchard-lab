@@ -1,4 +1,4 @@
-# 🍎 Orchard Lab — PhD Simulator
+# 🍎 Orchard Lab
 
 A cute, Stardew-style browser game for studying **sequential decision-making under an unknown skill and learning rate**. It's built so humans and LLMs can play the *exact same* task for a 1:1 comparison: when to practice, when to check how good you are, when to ask for a demonstration, and when to stop.
 
@@ -8,14 +8,14 @@ Part of a Computational Models of Cognition final project (Josh Roy & Samuel M. 
 
 ## The task
 
-You're a PhD student with `n` apples. You have a hidden cutting skill `k` (the probability that a cut is clean) and a hidden learning rate `lr`. Each day you pick one action:
+You're an apprentice in the Orchard Lab with `n` apples. You have a hidden cutting skill `k` (the probability that a cut is clean) and a hidden learning rate `lr`. Each day you pick one action:
 
 | Action | Apples used | Effect | What you observe |
 |---|---|---|---|
 | **Practice** | 1 | `k ← min(kmax, k + lr)` | nothing (you don't learn whether the cut was clean) |
 | **Mock review (m)** | m | none | how many of the m cuts were clean ~ Binomial(m, k) |
 | **Ask for a demo** | 2 | `k ← min(kmax, k + demoMult · lr)`, where `demoMult` ∈ {1.5, 3} | nothing |
-| **Defend thesis** | all remaining | ends the round | clean cuts on all remaining apples, which is the **score** |
+| **Final test** (`DEFEND`) | all remaining | ends the round | clean cuts on all remaining apples, which is the **score** |
 
 Expected score if you defend now = `apples_left × k`. Practicing makes you better but leaves fewer apples to score with. That's the trade-off.
 
@@ -33,34 +33,35 @@ Open `http://<host>:8080`. Finished sessions are saved automatically to `data/<p
 
 ## Setting up a session
 
-The **setup screen** lets the researcher choose:
+**Participants just open the plain URL** (e.g. `http://<host>:8080/` or the GitHub Pages link). The game starts right away with the study settings. Participants never see the settings, and adding URL parameters doesn't change them. Each game gets an anonymous random ID such as `p_3fa9c01b22de`, and the start and finish times are recorded. Nobody types a name.
 
-- **Participant ID**
-- **Apples (n)**
-- **Rounds**: repeated games ("PhD years"); skill resets each round
-- **Starting skill k₀** and **learning rate**: hidden from the player. A comma list such as `0.1, 0.3` uses a different value each round.
-- **Demonstration boost**: 1.5× lr, 3× lr, or off
-- **Random seed**
-- *Researcher options:* skill cap `kmax`, and a debug panel that shows hidden `k`, the expected value of defending now, and the oracle strategy
+The study settings live in one constant near the top of the UI script in `index.html`:
 
-**Don't let participants see the setup screen**, because it shows the hidden parameters. Fill it in and click **🔗 Copy participant link**. That gives you a URL with `go=1`, which skips setup and asks the participant only for their ID. Every setting can also go in the URL:
+```js
+const STUDY = { n:20, rounds:1, k:'0.1', lr:'0.1', demo:'1.5', kmax:1 };
+```
+
+The seed is random for each participant and saved in the data, so an LLM can later replay the same apple luck.
+
+**Researcher setup** (for testing): open `?setup=1`. That screen lets you choose apples, rounds, k₀, learning rate (comma list = one per round), demo boost (1.5×, 3×, off), seed, skill cap and a debug panel. In setup mode these URL parameters prefill it:
 
 ```
-http://host:8080/?n=20&k=0.1&lr=0.1&demo=3&rounds=3&seed=42&go=1
+http://host:8080/?setup=1&n=20&k=0.1,0.3&lr=0.1&demo=3&rounds=2&seed=42&debug=1
 ```
 
 | Param | Default | Notes |
 |---|---|---|
+| `setup` | — | `1` opens the researcher setup screen; required for any other parameter to apply |
 | `n` | 20 | apples per round |
 | `k` | 0.1 | starting skill; comma list = per round |
 | `lr` | 0.1 | learning rate; comma list = per round |
 | `demo` | 1.5 | `1.5`, `3`, or `off` |
-| `rounds` | 1 | |
+| `rounds` | 1 | skill resets each round |
 | `seed` | random | round r uses `seed + 7919·r` |
 | `kmax` | 1 | skill cap |
-| `pid` | — | participant ID (if missing with `go=1`, the game asks) |
-| `go` | — | `1` skips the setup screen |
-| `debug` | 0 | `1` shows hidden skill |
+| `debug` | 0 | `1` shows hidden skill, the value of stopping now, and the oracle strategy |
+
+Saved data has `mode: "participant"` or `"researcher"`, so test games are easy to filter out.
 
 ## Running an LLM on the same task
 
@@ -98,7 +99,7 @@ python3 server.py &
 python3 tests/e2e.py http://localhost:8080
 ```
 
-Plays two full rounds in headless Chromium (practice → demo → review → defend, then a second round with different params), checks apple counts, hidden-skill updates, server save and CSV export, phone layout, and participant-link mode.
+Plays two full rounds in headless Chromium (practice → demo → review → defend, then a second round with different params), checks apple counts, hidden-skill updates, server save and CSV export, phone layout, and participant mode (no setup screen, URL can't change settings, anonymous ID).
 
 ## Bayes-optimal solver
 

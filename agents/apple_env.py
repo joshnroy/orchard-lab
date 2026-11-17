@@ -101,7 +101,7 @@ class AppleEnv:
     def rules_text(self):
         d, p = self.demo_enabled, self.p
         lines = [
-            "You are a new PhD student in the Orchard Lab. Your thesis is about cutting apples cleanly.",
+            "You are a new apprentice in the Orchard Lab, learning to cut apples cleanly.",
             f"You start with {p['n']} apples. You have some apple-cutting skill, but you do not know how good you are, and you do not know how fast you learn.",
             "",
             "Each day you choose ONE action:",
@@ -111,9 +111,9 @@ class AppleEnv:
         if d:
             lines.append(f"  DEMO — ask an expert to show you how it's done. The expert uses {p['demoCost']} apples. Watching improves your skill by an unknown amount. You do not get a score for the expert's cuts.")
         lines += [
-            "  DEFEND — finish training and defend your thesis: you cut ALL of your remaining apples in front of the committee.",
+            "  DEFEND — finish training and take the final test: you cut ALL of your remaining apples.",
             "",
-            f"Your score is the number of clean cuts at your thesis defense. Apples used for practice, reviews{', or demos' if d else ''} do not count toward your score. Try to get the highest score you can.",
+            f"Your score is the number of clean cuts in the final test. Apples used for practice, reviews{', or demos' if d else ''} do not count toward your score. Try to get the highest score you can.",
         ]
         return "\n".join(lines)
 
@@ -130,7 +130,7 @@ class AppleEnv:
             m = o["m"]
             return f"Day {self.t}: Mock review of {m} apple{'s' if m > 1 else ''}: {o['clean']} of {m} cuts were clean. {left}"
         m, c = o["m"], o["clean"]
-        return f"Day {self.t}: Thesis defense! You cut {m} apple{'' if m == 1 else 's'}: {c} clean cut{'' if c == 1 else 's'}. Final score: {c}."
+        return f"Day {self.t}: Final test! You cut {m} apple{'' if m == 1 else 's'}: {c} clean cut{'' if c == 1 else 's'}. Final score: {c}."
 
     def oracle(self):
         p = self.p

@@ -4,7 +4,7 @@
   python3 play.py practice     practice on 1 apple
   python3 play.py review M     mock review of M apples
   python3 play.py demo         ask an expert for a demonstration
-  python3 play.py defend       defend your thesis (cut all remaining apples)
+  python3 play.py defend       final test (cut all remaining apples)
 
 Every command except `status` uses up one day and cannot be undone.
 """
