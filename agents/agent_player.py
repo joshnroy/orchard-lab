@@ -114,11 +114,16 @@ def main():
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--pid", default=None)
+    ap.add_argument("--params-from-seed", action="store_true",
+                    help="ignore --k0/--lr/--demo and draw them from --seed, like the browser game")
     ap.add_argument("--timeout", type=float, default=1800)
     a = ap.parse_args()
 
     k0s, lrs = [float(x) for x in a.k0.split(",")], [float(x) for x in a.lr.split(",")]
     demo = None if a.demo == "off" else float(a.demo)
+    if a.params_from_seed:  # draw k0, lr and demo from the seed, as the browser game does for participants
+        from apple_env import settings_from_seed
+        k0s, lrs, demo = settings_from_seed(a.seed, a.rounds)
     pid = a.pid or f"agent_{a.model}_s{a.seed}"
     stamp = int(time.time())
     run_dir = ROOT / "agents" / "runs" / f"{pid}_{stamp}"

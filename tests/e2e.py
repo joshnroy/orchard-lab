@@ -5,6 +5,8 @@ Needs: pip install playwright && playwright install chromium
 """
 import os, sys, json, glob
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "agents"))
+from apple_env import params_from_seed  # noqa: E402
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
 SHOTS = sys.argv[2] if len(sys.argv) > 2 else "screenshots"
@@ -128,7 +130,9 @@ with sync_playwright() as p:
     new = set(glob.glob(os.path.join(DATA_DIR, "*.json"))) - before
     for f in new:
         d = json.load(open(f))
-        assert d["pid"].startswith("p_") and d["mode"] == "participant" and d["rounds"][0]["params"]["k0"] == 0.1
+        pr = d["rounds"][0]["params"]
+        assert d["pid"].startswith("p_") and d["mode"] == "participant" and d["config"]["paramsFrom"] == "seed"
+        assert {k: pr[k] for k in ("k0", "lr", "demoMult")} == params_from_seed(pr["seed"]), pr
         os.remove(f)
     browser.close()
 

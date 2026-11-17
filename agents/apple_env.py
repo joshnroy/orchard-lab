@@ -25,6 +25,22 @@ def mulberry32(seed: int):
     return rng
 
 
+# Hidden settings drawn from a seed, uniformly over the solver's prior grid. Matches
+# paramsFromSeed / settingsFromSeed in index.html, so a participant's seed reproduces their settings.
+PARAM_GRID = dict(k0=[0, 0.1, 0.2, 0.3, 0.4, 0.5], lr=[0.025, 0.05, 0.1, 0.15, 0.2], demoMult=[1.5, 3])
+
+
+def params_from_seed(seed: int) -> dict:
+    r = mulberry32((seed ^ 0x9E3779B9) & 0xFFFFFFFF)
+    return {k: v[int(r() * len(v))] for k, v in PARAM_GRID.items()}  # draw order: k0, lr, demoMult
+
+
+def settings_from_seed(seed: int, rounds: int = 1):
+    """(k0 per round, lr per round, demoMult) for a game, as the browser game draws them."""
+    per = [params_from_seed(seed + r * 7919) for r in range(rounds)]
+    return [p["k0"] for p in per], [p["lr"] for p in per], per[0]["demoMult"]
+
+
 class AppleEnv:
     def __init__(self, n=20, k0=0.1, lr=0.1, kmax=1.0, demoMult=1.5, demoCost=2, seed=1):
         self.p = dict(n=n, k0=k0, lr=lr, kmax=kmax, demoMult=demoMult, demoCost=demoCost, seed=seed)

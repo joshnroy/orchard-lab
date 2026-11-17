@@ -33,17 +33,26 @@ Open `http://<host>:8080`. Finished sessions are saved automatically to `data/<p
 
 ## Setting up a session
 
-**Participants just open the plain URL** (e.g. `http://<host>:8080/` or the GitHub Pages link). The game starts right away with the study settings. Participants never see the settings, and adding URL parameters doesn't change them. Each game gets an anonymous random ID such as `p_3fa9c01b22de`, and the start and finish times are recorded. Nobody types a name.
+**Participants just open the plain URL** (e.g. `http://<host>:8080/` or the GitHub Pages link). The game starts right away. Participants never see the settings, and adding URL parameters doesn't change them. Each game gets an anonymous random ID such as `p_3fa9c01b22de`, and the start and finish times are recorded. Nobody types a name.
 
-The study settings live in one constant near the top of the UI script in `index.html`:
+**Hidden settings are drawn from each participant's seed.** The seed is random per participant and saved in the data. It determines both the apple luck and the hidden settings, drawn uniformly from the same grid the Bayes-optimal solver assumes:
 
-```js
-const STUDY = { n:20, rounds:1, k:'0.1', lr:'0.1', demo:'1.5', kmax:1 };
+| Setting | Values (equally likely) |
+|---|---|
+| starting skill k₀ | 0, 0.1, 0.2, 0.3, 0.4, 0.5 |
+| learning rate | 0.025, 0.05, 0.1, 0.15, 0.2 |
+| demo boost | 1.5×, 3× |
+
+So the solver's prior is exactly the distribution participants face, and the seed alone reproduces a participant's game. The draw is `paramsFromSeed(seed)` in `index.html` and `params_from_seed(seed)` in `agents/apple_env.py`; the two match exactly. The fixed settings (20 apples, 1 round, skill cap 1) are in `STUDY` near the top of the UI script in `index.html`.
+
+To replay a participant's game with an LLM, pass their seed and `--params-from-seed`:
+
+```bash
+python3 agents/llm_player.py --seed 220085 --params-from-seed
+python3 agents/batch.py --player llm --seeds 220085 --reps 10 --params-from-seed
 ```
 
-The seed is random for each participant and saved in the data, so an LLM can later replay the same apple luck.
-
-**Researcher setup** (for testing): open `?setup=1`. That screen lets you choose apples, rounds, k₀, learning rate (comma list = one per round), demo boost (1.5×, 3×, off), seed, skill cap and a debug panel. In setup mode these URL parameters prefill it:
+**Researcher setup** (for testing): open `?setup=1`. That screen lets you choose apples, rounds, k₀, learning rate (comma list = one per round), demo boost (1.5×, 3×, off), seed, skill cap and a debug panel. Under *Researcher options* you can instead have k₀, lr and demo drawn from the seed, as participants get them (`fromseed=1`). In setup mode these URL parameters prefill it:
 
 ```
 http://host:8080/?setup=1&n=20&k=0.1,0.3&lr=0.1&demo=3&rounds=2&seed=42&debug=1

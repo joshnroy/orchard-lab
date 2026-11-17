@@ -143,11 +143,16 @@ def main():
     ap.add_argument("--rounds", type=int, default=1)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--pid", default=None)
+    ap.add_argument("--params-from-seed", action="store_true",
+                    help="ignore --k0/--lr/--demo and draw them from --seed, like the browser game")
     ap.add_argument("--out", default=str(ROOT / "data"))
     a = ap.parse_args()
 
     k0s, lrs = [float(x) for x in a.k0.split(",")], [float(x) for x in a.lr.split(",")]
     demo = None if a.demo == "off" else float(a.demo)
+    if a.params_from_seed:  # draw k0, lr and demo from the seed, as the browser game does for participants
+        from apple_env import settings_from_seed
+        k0s, lrs, demo = settings_from_seed(a.seed, a.rounds)
     pid = a.pid or f"llm_{a.model}_{a.effort or 'default'}_s{a.seed}"
     config = dict(pid=pid, n=a.n, rounds=a.rounds, k=k0s, lr=lrs, demoMult=demo, seed=a.seed, kmax=1, debug=False)
     llm = ClaudeCLI(a.model, a.thinking, a.effort)
