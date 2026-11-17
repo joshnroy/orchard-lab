@@ -9,8 +9,31 @@ Two LLM players, adapted from [robocode](https://github.com/tomsilver/robocode),
 | Player | What it is | Sees |
 |---|---|---|
 | **Human** | browser game (`index.html`) | rules scroll + Lab Notebook lines |
-| **LLM only** (`agents/llm_player.py`) | Opus 5.5 through `claude -p` with all tools disabled and an empty system prompt, one call per game day in one continuous session. Robocode's `ClaudeCLIClient` setup; no extended thinking. | the same rules text and notebook lines, plus one line describing the answer format |
+| **LLM only** (`agents/llm_player.py`) | Opus 5.5 through `claude -p` with all tools disabled and an empty system prompt, one call per game day in one continuous session. Robocode's `ClaudeCLIClient` setup. Thinking is adaptive at the CLI's default effort: Opus 5.5 can't turn thinking off, and the CLI ignores `--max-thinking-tokens 0`. | the same rules text and notebook lines, plus one line describing the answer format |
 | **Coding agent** (`agents/agent_player.py`) | Opus 5.5 in Claude Code with Bash/Read/Write/Edit/Glob/Grep, as in robocode's agentic backend. It acts only through `python3 play.py <action>` and can write and run any code. Sandboxed with bubblewrap. | the same rules text, plus `play.py` usage |
+
+## All players, with clean-cut percentage
+
+"Clean %" is clean cuts ÷ apples defended, the defense's accuracy. "Final skill" is the hidden skill at the defense, which is the expected clean %. Values are means ± 95% CI.
+
+| Player | Games | Score | Apples defended | Clean % | Final skill | Expected score | Loss vs optimal | Reviews | Cost / game |
+|---|---|---|---|---|---|---|---|---|---|
+| **Opus 5.5, LLM only** (CLI default effort) | 20 | 6.40 ± 0.77 | 11.65 ± 0.87 | 56.0 ± 7.3 | 0.67 ± 0.05 | **7.62 ± 0.46** | **1.86 ± 0.26** | 0.90 | $0.37 |
+| **Fable 5.2, LLM only** (effort high) | 10 | 6.30 ± 0.72 | 13.20 ± 1.98 | 50.9 ± 10.5 | 0.54 ± 0.06 | **6.89 ± 0.58** | **1.90 ± 0.73** | 0.90 | ~$0.18* |
+| **Opus 5.5, coding agent** | 20 | 4.75 ± 0.63 | 9.05 ± 1.18 | 55.4 ± 8.5 | 0.67 ± 0.06 | **5.75 ± 0.38** | **3.31 ± 0.38** | 1.95 | $0.92 |
+| Kartik | 1 | 5 | 5 | **100** | 0.95 | 4.75 | 4.77 | 2 | |
+| Abhay | 1 | 6 | 15 | 40 | 0.50 | 7.50 | 0.02 | 0 | |
+| *Bayes-optimal* | | | *15* | | *0.55* | *8.25* | *0* | *0* | |
+
+\* The CLI (2.1.299) doesn't know Fable 5.2's price and reports almost zero, so this cost is estimated from token counts at $8 / $40 per MTok. Fable's games used little thinking: 16.8k thinking tokens across all 10.
+
+**Clean % measures accuracy, not score.** Defending fewer apples after more training gives a higher clean % but usually a lower score. Kartik is the extreme case: 100% clean on only 5 apples, for a score of 5. Abhay got 40% on 15 apples, for a score of 6 and a much higher expected score. The optimal policy also aims for about 55% on 15 apples rather than high accuracy. Every model ends up between those two extremes (51–56%).
+
+**Fable 5.2 at high effort is no better than Opus 5.5.** Its loss against the optimal policy (1.90 ± 0.73) matches Opus (1.86 ± 0.26), but it plays in two distinct ways:
+- **4 of 10 games:** practice 3–4 times, never review, defend 16–17 apples. This is nearly the optimal policy.
+- **6 of 10 games:** review once or twice (one game reviewed on day 1), then defend 9–14 apples. These lose about 2–4 points each, the same review mistake the other models make.
+
+It stops training earlier than Opus (final skill 0.54 vs 0.67), so its expected score is lower with these hidden settings (6.89 vs 7.62). Under the solver's prior, though, stopping early costs almost nothing, which is why the loss is the same. Fable needs more games to separate the two clearly; 10 games gives wide intervals.
 
 ## Repeated runs: 10 games per player per seed
 
@@ -67,7 +90,7 @@ P = practice, D = demo, Rm = mock review of m apples. "Expected score" is apples
 ## Caveats
 
 - **Two humans, two seeds.** The LLM numbers now rest on 20 games per player, but the human side is still 2 people, each playing once.
-- **One model, one setting.** Opus 5.5 with no extended thinking for the LLM and default effort for the agent. Thinking and effort may change review behaviour.
+- **Effort.** The Opus 5.5 runs used adaptive thinking at the CLI's default effort for both players. An earlier version of this page said "no extended thinking", which was wrong: the CLI ignored `--max-thinking-tokens 0`, and a test prompt still produced thinking tokens.
 - **The optimal baseline depends on the prior.** The solver assumes a uniform prior over k₀ ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2} and demo ∈ {1.5, 3}, and it knows the game's structure. Losses are measured against that.
 - **Prompts are matched as closely as possible but not identical.** The LLM gets an answer-format line, and the agent gets `play.py` instructions and a short system prompt.
 

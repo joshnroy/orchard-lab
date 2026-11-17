@@ -121,7 +121,7 @@ Options:
 
 ```bash
 # LLM only: one `claude -p` call per game day, all tools disabled, empty system prompt
-python3 agents/llm_player.py --seed 381892 --model claude-opus-5-5 [--thinking 8000]
+python3 agents/llm_player.py --seed 381892 --model claude-opus-5-5 [--effort high]   # thinking is always adaptive; --effort sets depth
 
 # Coding agent: Claude Code with shell and file tools, acting through `python3 play.py <action>`
 python3 agents/agent_player.py --seed 381892 --model claude-opus-5-5 [--effort high] [--budget 5]

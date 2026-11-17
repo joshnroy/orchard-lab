@@ -10,7 +10,11 @@ Notebook line per day. The only addition is the answer-format instruction.
 
 Usage:
   python agents/llm_player.py --seed 381892 --model claude-opus-5-5
-  python agents/llm_player.py --k0 0.1 --lr 0.1 --demo 3 --rounds 3 --thinking 8000
+  python agents/llm_player.py --model claude-fable-5-2 --effort high --seed 381892
+
+Thinking: current models (Opus 5.5, Fable 5.2) always use adaptive thinking and
+cannot turn it off; the CLI ignores --max-thinking-tokens 0. Depth is set with
+--effort (low/medium/high/xhigh/max); without it the CLI's default effort applies.
 """
 from __future__ import annotations
 
@@ -34,19 +38,28 @@ FORMAT = (
 ACTION_RE = re.compile(r"ACTION:\s*(PRACTICE|DEMO|DEFEND|REVIEW\s+(\d+))\b", re.I)
 
 
+# USD per million tokens: (input, output, cache write, cache read). Used when the CLI
+# doesn't know a model's price (it reports a near-zero cost for claude-fable-5-2).
+PRICES = {"claude-fable-5-2": (8.0, 40.0, 10.0, 0.20)}
+
+
 class ClaudeCLI:
     """Plain-LLM completions through the Claude CLI, continuing one session."""
 
-    def __init__(self, model: str, thinking: int = 0, timeout: float = 600):
-        self.model, self.thinking, self.timeout = model, thinking, timeout
+    def __init__(self, model: str, thinking: int | None = None, effort: str = "", timeout: float = 1800):
+        self.model, self.thinking, self.effort, self.timeout = model, thinking, effort, timeout
         self.session_id = None
         self.cost = 0.0
+        self.usage = []  # per call: input/output/thinking tokens
 
     def send(self, text: str) -> str:
         args = ["claude", "-p", "--output-format", "json", "--model", self.model,
                 "--tools", "", "--disallowedTools", "*", "--system-prompt", "",
-                "--exclude-dynamic-system-prompt-sections",
-                "--max-thinking-tokens", str(self.thinking)]
+                "--exclude-dynamic-system-prompt-sections"]
+        if self.thinking is not None:
+            args += ["--max-thinking-tokens", str(self.thinking)]
+        if self.effort:
+            args += ["--effort", self.effort]
         if self.session_id:
             args += ["--resume", self.session_id]
         # Clean environment: when launched from inside Claude Code / the desktop app, the
@@ -63,7 +76,19 @@ class ClaudeCLI:
         if data.get("is_error"):
             raise RuntimeError(f"claude error: {data}")
         self.session_id = data["session_id"]
-        self.cost += data.get("total_cost_usd") or 0.0
+        u = data.get("usage", {})
+        call = dict(input=u.get("input_tokens", 0), cache_write=u.get("cache_creation_input_tokens", 0),
+                    cache_read=u.get("cache_read_input_tokens", 0), output=u.get("output_tokens", 0),
+                    thinking=(u.get("output_tokens_details") or {}).get("thinking_tokens", 0),
+                    models=list(data.get("modelUsage", {})))
+        if self.model in PRICES:
+            pi, po, pw, pr = PRICES[self.model]
+            call["cost_usd"] = (call["input"] * pi + call["output"] * po + call["cache_write"] * pw
+                                + call["cache_read"] * pr) / 1e6
+        else:
+            call["cost_usd"] = data.get("total_cost_usd") or 0.0
+        self.cost += call["cost_usd"]
+        self.usage.append(call)
         return data["result"]
 
 
@@ -108,7 +133,9 @@ def play_round(llm: ClaudeCLI, env: AppleEnv, log: GameLog, first: bool, rnd: in
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model", default="claude-opus-5-5")
-    ap.add_argument("--thinking", type=int, default=0, help="max thinking tokens (0 = off, as in robocode)")
+    ap.add_argument("--effort", default="", help="low/medium/high/xhigh/max (default: the CLI's default)")
+    ap.add_argument("--thinking", type=int, default=None,
+                    help="--max-thinking-tokens for older models; current models ignore 0 and always think")
     ap.add_argument("--n", type=int, default=20)
     ap.add_argument("--k0", default="0.1", help="comma list = one per round")
     ap.add_argument("--lr", default="0.1", help="comma list = one per round")
@@ -121,10 +148,11 @@ def main():
 
     k0s, lrs = [float(x) for x in a.k0.split(",")], [float(x) for x in a.lr.split(",")]
     demo = None if a.demo == "off" else float(a.demo)
-    pid = a.pid or f"llm_{a.model}_t{a.thinking}_s{a.seed}"
+    pid = a.pid or f"llm_{a.model}_{a.effort or 'default'}_s{a.seed}"
     config = dict(pid=pid, n=a.n, rounds=a.rounds, k=k0s, lr=lrs, demoMult=demo, seed=a.seed, kmax=1, debug=False)
-    llm = ClaudeCLI(a.model, a.thinking)
-    log = GameLog(pid, config, dict(name="llm_only", model=a.model, thinking=a.thinking))
+    llm = ClaudeCLI(a.model, a.thinking, a.effort)
+    log = GameLog(pid, config, dict(name="llm_only", model=a.model, effort=a.effort or "cli-default",
+                                    thinking=a.thinking))
     for r in range(a.rounds):
         env = AppleEnv(n=a.n, k0=k0s[r % len(k0s)], lr=lrs[r % len(lrs)], demoMult=demo, seed=a.seed + r * 7919)
         log.start_round(env, r + 1)
@@ -132,7 +160,7 @@ def main():
         play_round(llm, env, log, r == 0, r + 1, a.rounds)
     Path(a.out).mkdir(exist_ok=True)
     path = log.finish(Path(a.out) / f"{pid}_{int(__import__('time').time())}.json",
-                      cost_usd=llm.cost, session_id=llm.session_id)
+                      cost_usd=llm.cost, session_id=llm.session_id, usage=llm.usage)
     print(f"saved {path}  (cost ${llm.cost:.3f})")
 
 

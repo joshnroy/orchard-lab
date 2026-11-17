@@ -50,8 +50,12 @@ def game_loss(R):
 
 
 def player_type(d):
-    p = d.get("player", {}).get("name")
-    return {"llm_only": "LLM only", "coding_agent": "Coding agent"}.get(p, "Human")
+    p = d.get("player", {})
+    name = {"llm_only": "LLM only", "coding_agent": "Coding agent"}.get(p.get("name"), "Human")
+    if name != "Human" and p.get("model", "claude-opus-5-5") != "claude-opus-5-5":
+        name += f" ({p['model']}"
+        name += f", effort {p['effort']})" if p.get("effort") not in (None, "", "cli-default") else ")"
+    return name
 
 
 def summarize(paths):
@@ -68,6 +72,8 @@ def summarize(paths):
             rows.append(dict(
                 file=Path(path).name, pid=d["pid"], player=player_type(d), seed=R["params"]["seed"],
                 round=R["round"], score=R["final"]["score"], defended=R["final"]["apples_tested"],
+                clean_pct=round(100 * R["final"]["score"] / R["final"]["apples_tested"], 1) if R["final"]["apples_tested"] else None,
+                final_skill=round(R["final"]["k_final"], 3),
                 expected=round(R["final"]["expected_score"], 3), loss=round(game_loss(R), 3),
                 reviews=sum(s["action"] == "review" for s in steps),
                 apples_practice=spent["practice"], apples_demo=spent["demo"], apples_review=spent["review"],
@@ -76,6 +82,8 @@ def summarize(paths):
 
 
 def mean_ci(xs):
+    if not xs:
+        return "–"
     m = st.mean(xs)
     if len(xs) < 2:
         return f"{m:.2f}"
@@ -86,13 +94,13 @@ def table(rows, by=("player",)):
     groups = defaultdict(list)
     for r in rows:
         groups[tuple(r[k] for k in by)].append(r)
-    cols = ["score", "expected", "loss", "reviews", "apples_review", "defended"]
+    cols = ["score", "defended", "clean_pct", "final_skill", "expected", "loss", "reviews", "apples_review"]
     out = ["| " + " | ".join(by) + " | games | " + " | ".join(cols) + " |",
            "|" + "---|" * (len(by) + 1 + len(cols))]
     for key in sorted(groups):
         g = groups[key]
         out.append("| " + " | ".join(str(k) for k in key) + f" | {len(g)} | " +
-                   " | ".join(mean_ci([r[c] for r in g]) for c in cols) + " |")
+                   " | ".join(mean_ci([r[c] for r in g if r[c] is not None]) for c in cols) + " |")
     return "\n".join(out)
 
 
