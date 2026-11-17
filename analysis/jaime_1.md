@@ -31,10 +31,12 @@ These use the same solver and prior as the other analyses: observed information 
 | Player | Expected score |
 |---|---|
 | Full information | **11.0** (practice 9×, defend 11) |
-| Bayes-optimal, observed information only | **8.25** (practice 3×, demo 1×, defend 15) |
+| Bayes-optimal, observed information only | **8.25** (practice 3×, demo 1×, defend 15); actual on Jaime's seed: **5 of 15** |
 | Abhay | 7.5; actual: 6 |
 | Kartik | 4.75; actual: 5 |
 | **Jaime** | **3.0**; actual: 3 |
+
+Played on Jaime's seed, the optimal policy never reviews, so its moves don't depend on luck: practice ×3, demo, defend 15. It scores **5 of 15**, an unlucky draw against its expected 8.25 (it gets 9 of 15 on Kartik's seed and 6 of 15 on Abhay's). Full information (practice ×9 to skill 1.0) gets 11 of 11 on every seed.
 
 ### Goal 1: maximize expected score
 
