@@ -99,3 +99,18 @@ python3 tests/e2e.py http://localhost:8080
 ```
 
 Plays two full rounds in headless Chromium (practice → demo → review → defend, then a second round with different params), checks apple counts, hidden-skill updates, server save and CSV export, phone layout, and participant-link mode.
+
+## Bayes-optimal solver
+
+`solver/pomdp.py` is an exact expectimax solver over beliefs. The player doesn't know `k0`, `lr`, or the demo multiplier, so the solver puts a discrete prior over all three. Only reviews produce observations, so the belief is the prior times binomial review likelihoods. Search over (apples, practices, demos, belief) is memoized. Reviews are pruned with an exact bound: no review can beat the full-information value with m fewer apples. With n = 20 it solves in well under a second for the score objective.
+
+```bash
+python3 solver/pomdp.py solve --n 20                         # optimal plan from the start
+python3 solver/pomdp.py analyze data/<pid>_<time>.json       # Q-values and loss at every step a player took
+python3 solver/pomdp.py oracle --k0 0.1 --lr 0.1 --demo 3    # known-parameter optimum (sanity check)
+```
+
+Options:
+- `--objective score` (default): maximize expected clean cuts at the defense, which is the game's score.
+- `--objective perfect [--min-defend M]`: maximize the probability that every apple at the defense is clean, defending at least M apples.
+- `--k0-grid`, `--lr-grid`, `--demo-grid`: set the prior. The default is uniform over k0 ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2}, demo× ∈ {1.5, 3}. Results depend on this prior.
