@@ -70,7 +70,32 @@ Jaime trained hard and defended few apples, as Kartik did, so this goal may be c
 2. **They learned well but ran out of apples.** Final skill was 0.75, the highest of the three humans after Kartik's 0.95, and 75% of their final cuts were clean. The best they could have done by stopping was 4.5 (on day 5), still below the optimal 8.25 because of the 6 apples already spent on reviews.
 3. **Early bad luck pushed them toward caution.** Two 0-of-3 reviews in a row are discouraging. A reasonable reaction is to keep checking. Every review result here was typical for the true skill, but a player can't tell that from inside the game.
 4. **Long pause at the start, then fast.** 196 s on the first move (reading the rules) and 50 s before the third review. Everything else took a few seconds.
-5. **No LLM has played this seed yet.** The LLM comparisons in [llm_vs_humans.md](llm_vs_humans.md) use Kartik's and Abhay's seeds. Seed 220085 can be replayed with `agents/batch.py --seeds 220085` for an exact match.
+5. **On this seed the LLMs all beat Jaime** (see below), and Fable 5.2 came close to the optimal policy.
+
+## LLMs on Jaime's seed
+
+Each player ran 10 games on seed 220085 with the same settings. Values are means ± 95% CI.
+
+| Player | Games | Score | Defended | Clean % | Expected score | Loss vs optimal | Reviews | Reviewed on day 1 |
+|---|---|---|---|---|---|---|---|---|
+| **Fable 5.2, LLM only** (effort high) | 10 | 5.20 ± 0.39 | 15.0 ± 1.8 | 38 | **7.89 ± 0.47** | **0.65 ± 0.54** | 0.2 | 0 of 10 |
+| **Opus 5.5, LLM only** | 10 | 6.00 ± 0.72 | 9.7 ± 2.0 | 68 | **7.07 ± 1.07** | **2.18 ± 0.85** | 1.4 | 2 of 10 |
+| **Opus 5.5, coding agent** | 10 | 5.40 ± 0.52 | 8.1 ± 2.6 | 79 | **5.54 ± 0.76** | **3.31 ± 0.93** | 1.9 | 7 of 10 |
+| Jaime | 1 | 3 | 4 | 75 | 3.00 | 5.53 | 3 | yes |
+| *Bayes-optimal* | | 5 | 15 | 33 | *8.25* | *0* | *0* | |
+
+- **Fable 5.2** practised 4 times and defended 16 apples in 8 of 10 games, which is nearly the optimal policy. It reviewed in only 1 game. On the earlier seeds it reviewed in 6 of 10 games, so this run makes its no-review style look like its main one.
+- **Opus LLM-only** mostly practised 3–5 times, then reviewed once or twice and trained more. It reviewed on day 1 in 2 games, which it never did in its 20 games on the other seeds.
+- **The coding agent** reviewed on day 1 in 7 of 10 games, as on the other seeds, and defended the fewest apples. It also cost the most: $15.95 for 10 games, against $5.20 for Opus LLM-only and about $1.32 for Fable.
+- **Raw scores are bunched (5–6)** because this seed is unlucky for large defenses. The optimal policy itself scores only 5 here, and every Fable game that defended 15–16 apples scored 5. The coding agent's 5.4 comes from small, accurate defenses, but its expected score is much lower. Compare by expected score and loss.
+
+Jaime's play is closest to the coding agent's: review first, review often, defend few apples. Jaime went further in the same direction, with three reviews and 4 apples defended.
+
+```bash
+python3 agents/batch.py --player llm   --seeds 220085 --reps 10
+python3 agents/batch.py --player llm   --seeds 220085 --reps 10 --tag fable --model claude-fable-5-2 --effort high
+python3 agents/batch.py --player agent --seeds 220085 --reps 10
+```
 
 ## Reproduce
 

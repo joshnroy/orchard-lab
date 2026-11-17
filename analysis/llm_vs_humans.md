@@ -14,33 +14,33 @@ Two LLM players, adapted from [robocode](https://github.com/tomsilver/robocode),
 
 ## All players, with clean-cut percentage
 
-"Clean %" is clean cuts ÷ apples defended, the defense's accuracy. "Final skill" is the hidden skill at the defense, which is the expected clean %. Values are means ± 95% CI.
+All three seeds: Kartik's (381892), Abhay's (513651) and Jaime's (220085). Opus players have 10 games per seed; Fable has 10 on Jaime's seed and 10 spread over the other two. "Clean %" is clean cuts ÷ apples defended, the defense's accuracy. "Final skill" is the hidden skill at the defense, which is the expected clean %. Values are means ± 95% CI.
 
-| Player | Games | Score | Apples defended | Clean % | Final skill | Expected score | Loss vs optimal | Reviews | Cost / game |
-|---|---|---|---|---|---|---|---|---|---|
-| **Opus 5.5, LLM only** (CLI default effort) | 20 | 6.40 ± 0.77 | 11.65 ± 0.87 | 56.0 ± 7.3 | 0.67 ± 0.05 | **7.62 ± 0.46** | **1.86 ± 0.26** | 0.90 | $0.37 |
-| **Fable 5.2, LLM only** (effort high) | 10 | 6.30 ± 0.72 | 13.20 ± 1.98 | 50.9 ± 10.5 | 0.54 ± 0.06 | **6.89 ± 0.58** | **1.90 ± 0.73** | 0.90 | ~$0.18* |
-| **Opus 5.5, coding agent** | 20 | 4.75 ± 0.63 | 9.05 ± 1.18 | 55.4 ± 8.5 | 0.67 ± 0.06 | **5.75 ± 0.38** | **3.31 ± 0.38** | 1.95 | $0.92 |
-| Kartik | 1 | 5 | 5 | **100** | 0.95 | 4.75 | 4.77 | 2 | |
-| Abhay | 1 | 6 | 15 | 40 | 0.50 | 7.50 | 0.02 | 0 | |
-| [Jaime](jaime_1.md) † | 1 | 3 | 4 | 75 | 0.75 | 3.00 | 5.53 | 3 | |
-| *Bayes-optimal* | | | *15* | | *0.55* | *8.25* | *0* | *0* | |
+| Player | Games | Score | Apples defended | Clean % | Final skill | Expected score | Loss vs optimal | Reviews | Reviewed on day 1 | Cost / game |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Fable 5.2, LLM only** (effort high) | 20 | 5.75 ± 0.47 | 14.10 ± 1.35 | 44.6 ± 8.8 | 0.54 ± 0.04 | **7.39 ± 0.43** | **1.28 ± 0.52** | 0.55 | 1 of 20 | ~$0.16* |
+| **Opus 5.5, LLM only** (CLI default effort) | 30 | 6.27 ± 0.56 | 11.00 ± 0.93 | 60.0 ± 7.0 | 0.69 ± 0.04 | **7.43 ± 0.47** | **1.97 ± 0.33** | 1.07 | 2 of 30 | $0.42 |
+| **Opus 5.5, coding agent** | 30 | 4.97 ± 0.46 | 8.73 ± 1.16 | 63.3 ± 9.1 | 0.70 ± 0.06 | **5.68 ± 0.35** | **3.31 ± 0.39** | 1.93 | 24 of 30 | $1.15 |
+| [Kartik](kartik_1.md) | 1 | 5 | 5 | **100** | 0.95 | 4.75 | 4.77 | 2 | no | |
+| [Abhay](abhay_1.md) | 1 | 6 | 15 | 40 | 0.50 | 7.50 | 0.02 | 0 | no | |
+| [Jaime](jaime_1.md) | 1 | 3 | 4 | 75 | 0.75 | 3.00 | 5.53 | 3 | yes | |
+| *Bayes-optimal* | | | *15* | | *0.55* | *8.25* | *0* | *0* | | |
 
-\* The CLI (2.1.299) doesn't know Fable 5.2's price and reports almost zero, so this cost is estimated from token counts at $8 / $40 per MTok. Fable's games used little thinking: 16.8k thinking tokens across all 10.
+\* The CLI (2.1.299) doesn't know Fable 5.2's price and reports almost zero, so this cost is estimated from token counts at $8 / $40 per MTok.
 
-† Jaime played a different seed (220085) that no LLM has played yet. Same settings otherwise.
+Per-seed results for Jaime's seed are in [jaime_1.md](jaime_1.md#llms-on-jaimes-seed). On that seed Fable lost only 0.65 (it practised 4 times and defended 16 apples in 8 of 10 games), Opus LLM-only 2.18, the coding agent 3.31, and Jaime 5.53.
 
-**Clean % measures accuracy, not score.** Defending fewer apples after more training gives a higher clean % but usually a lower score. Kartik is the extreme case: 100% clean on only 5 apples, for a score of 5. Abhay got 40% on 15 apples, for a score of 6 and a much higher expected score. The optimal policy also aims for about 55% on 15 apples rather than high accuracy. Every model ends up between those two extremes (51–56%).
+**Clean % measures accuracy, not score.** Defending fewer apples after more training gives a higher clean % but usually a lower score. Kartik is the extreme case: 100% clean on only 5 apples, for a score of 5. Abhay got 40% on 15 apples, for a score of 6 and a much higher expected score. The optimal policy also aims for about 55% on 15 apples rather than high accuracy. Every model ends up between those two extremes (45–63%).
 
-**Fable 5.2 at high effort is no better than Opus 5.5.** Its loss against the optimal policy (1.90 ± 0.73) matches Opus (1.86 ± 0.26), but it plays in two distinct ways:
+**Fable 5.2 at high effort is now the closest model to optimal, with a loss of 1.28 ± 0.52 against Opus's 1.97 ± 0.33.** After its first 10 games (on Kartik's and Abhay's seeds) it looked tied with Opus (1.90 vs 1.86). Its 10 games on Jaime's seed were mostly near-optimal. It plays in two distinct ways; the counts below are from its first 10 games:
 - **4 of 10 games:** practice 3–4 times, never review, defend 16–17 apples. This is nearly the optimal policy.
 - **6 of 10 games:** review once or twice (one game reviewed on day 1), then defend 9–14 apples. These lose about 2–4 points each, the same review mistake the other models make.
 
-It stops training earlier than Opus (final skill 0.54 vs 0.67), so its expected score is lower with these hidden settings (6.89 vs 7.62). Under the solver's prior, though, stopping early costs almost nothing, which is why the loss is the same. Fable needs more games to separate the two clearly; 10 games gives wide intervals.
+Across all 20 games it stops training earlier than Opus (final skill 0.54 vs 0.69) but defends more apples, so its expected score with the true settings ties Opus (7.39 vs 7.43). Its loss is lower because, under the solver's prior, stopping early costs little and reviewing costs a lot. On Jaime's seed, 9 of its 10 games had no review, so the no-review style seems to be its main one.
 
-## Repeated runs: 10 games per player per seed
+## Repeated runs on Kartik's and Abhay's seeds
 
-After the first single games below, each LLM player played **10 more games on each seed** (40 games, $25.82 total). Values are means ± 95% CI; the per-game data is in [games.csv](games.csv).
+This section covers only the first two seeds. After the first single games below, each LLM player played **10 more games on each seed** (40 games, $25.82 total). Values are means ± 95% CI; the per-game data is in [games.csv](games.csv).
 
 | Player | Games | Actual score | Expected score | Loss vs optimal | Reviews | Apples on reviews | Apples defended | Cost / game |
 |---|---|---|---|---|---|---|---|---|
@@ -92,7 +92,7 @@ P = practice, D = demo, Rm = mock review of m apples. "Expected score" is apples
 
 ## Caveats
 
-- **Three humans, three seeds.** The LLM numbers rest on 10–20 games per player, but the human side is 3 people, each playing once. [Jaime](jaime_1.md) (loss 5.53, three reviews) is on a seed the LLMs haven't played yet.
+- **Three humans, three seeds.** The LLM numbers rest on 20–30 games per player, but the human side is 3 people, each playing once.
 - **Effort.** The Opus 5.5 runs used adaptive thinking at the CLI's default effort for both players. An earlier version of this page said "no extended thinking", which was wrong: the CLI ignored `--max-thinking-tokens 0`, and a test prompt still produced thinking tokens.
 - **The optimal baseline depends on the prior.** The solver assumes a uniform prior over k₀ ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2} and demo ∈ {1.5, 3}, and it knows the game's structure. Losses are measured against that.
 - **Wording changed after these runs.** All games on this page used the earlier "PhD student / thesis defense" rules text. The game and the LLM players now say "apprentice / final test" instead; the actions and rules are otherwise unchanged.
