@@ -95,7 +95,6 @@ P = practice, D = demo, Rm = mock review of m apples. "Expected score" is apples
 - **Three humans, three seeds.** The LLM numbers rest on 20–30 games per player, but the human side is 3 people, each playing once.
 - **Effort.** The Opus 5.5 runs used adaptive thinking at the CLI's default effort for both players. An earlier version of this page said "no extended thinking", which was wrong: the CLI ignored `--max-thinking-tokens 0`, and a test prompt still produced thinking tokens.
 - **The optimal baseline depends on the prior.** The solver assumes a uniform prior over k₀ ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2} and demo ∈ {1.5, 3}, and it knows the game's structure. Losses are measured against that.
-- **Wording changed after these runs.** All games on this page used the earlier "PhD student / thesis defense" rules text. The game and the LLM players now say "apprentice / final test" instead; the actions and rules are otherwise unchanged.
 - **Prompts are matched as closely as possible but not identical.** The LLM gets an answer-format line, and the agent gets `play.py` instructions and a short system prompt.
 
 ## Reproduce

@@ -14,7 +14,7 @@ errors = []
 
 
 def clear_dialog(page):
-    """Click through the mentor's dialogue until it closes."""
+    """Click through the advisor's dialogue until it closes."""
     for _ in range(40):
         if not page.is_visible("#dialog"):
             return
@@ -117,10 +117,9 @@ with sync_playwright() as p:
     g.goto(BASE + "/?n=12&k=0.9&demo=off&debug=1")
     assert not g.is_visible("#screen-setup")
     clear_dialog(g); rules = g.inner_text("#rulesTxt")
-    assert "DEMO" in rules and "20 apples" in rules and "PhD" not in rules and "thesis" not in rules, rules
+    assert "DEMO" in rules and "20 apples" in rules and "PhD student" in rules, rules
     g.click("#rules-ok"); wait_ready(g)
     assert apples(g) == 20 and g.is_visible("#act-demo") and not g.is_visible("#debug")
-    assert "PhD" not in g.content() and "thesis" not in g.inner_text("body").lower()
     g.click("#act-done"); g.click("#d-yes")
     g.wait_for_selector("#r-ok:not(.hidden)", timeout=10000); g.click("#r-ok"); clear_dialog(g)
     g.wait_for_selector("#screen-final:not(.hidden)")

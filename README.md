@@ -1,4 +1,4 @@
-# 🍎 Orchard Lab
+# 🍎 Orchard Lab — PhD Simulator
 
 A cute, Stardew-style browser game for studying **sequential decision-making under an unknown skill and learning rate**. It's built so humans and LLMs can play the *exact same* task for a 1:1 comparison: when to practice, when to check how good you are, when to ask for a demonstration, and when to stop.
 
@@ -8,14 +8,14 @@ Part of a Computational Models of Cognition final project (Josh Roy & Samuel M. 
 
 ## The task
 
-You're an apprentice in the Orchard Lab with `n` apples. You have a hidden cutting skill `k` (the probability that a cut is clean) and a hidden learning rate `lr`. Each day you pick one action:
+You're a PhD student with `n` apples. You have a hidden cutting skill `k` (the probability that a cut is clean) and a hidden learning rate `lr`. Each day you pick one action:
 
 | Action | Apples used | Effect | What you observe |
 |---|---|---|---|
 | **Practice** | 1 | `k ← min(kmax, k + lr)` | nothing (you don't learn whether the cut was clean) |
 | **Mock review (m)** | m | none | how many of the m cuts were clean ~ Binomial(m, k) |
 | **Ask for a demo** | 2 | `k ← min(kmax, k + demoMult · lr)`, where `demoMult` ∈ {1.5, 3} | nothing |
-| **Final test** (`DEFEND`) | all remaining | ends the round | clean cuts on all remaining apples, which is the **score** |
+| **Defend thesis** | all remaining | ends the round | clean cuts on all remaining apples, which is the **score** |
 
 Expected score if you defend now = `apples_left × k`. Practicing makes you better but leaves fewer apples to score with. That's the trade-off.
 

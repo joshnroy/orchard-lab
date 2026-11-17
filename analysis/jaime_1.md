@@ -1,7 +1,7 @@
 # Participant "Jaime 1": replay and optimal-policy comparison
 
 **Settings:** same as [Kartik 1](kartik_1.md) and [Abhay 1](abhay_1.md). 20 apples, starting skill k₀ = 0.1, learning rate 0.1, demos at 1.5×, skill cap 1.0, 1 round, seed 220085.
-**Played:** 2026-11-17, about 6 minutes from first view to the final test. This was the version with the earlier "PhD / thesis" wording; the rules and actions were the same as now.
+**Played:** 2026-11-17, about 6 minutes from first view to the defense.
 **Result:** defended 4 apples, 3 clean cuts → **score 3** (expected 3.0 at their final skill).
 
 ## Replay
@@ -20,7 +20,7 @@
 | 9 | practice | 4 | 0.75 | 3.0 | | 2.6 s |
 | 10 | defend | 0 | 0.75 | | 3 of 4 clean | 2.2 s |
 
-"Value if defended" is apples left × hidden skill, the expected score of stopping on that day. Its peak was 4.5 on day 5, and by the final test it was 3.0. The 3 reviews used 9 of the 20 apples.
+"Value if defended" is apples left × hidden skill, the expected score of stopping on that day. Its peak was 4.5 on day 5, and by the defense it was 3.0. The 3 reviews used 9 of the 20 apples.
 
 The review results were about what the true skill predicts. 0 of 3 at skill 0.10 had a 73% chance, 0 of 3 at 0.25 had 42%, and 1 of 3 at 0.45 had 41%. Defense: `0111`, 3 of 4 clean, exactly the expected 3.0.
 
@@ -62,7 +62,7 @@ Played on Jaime's seed, the optimal policy never reviews, so its moves don't dep
 
 ### Goal 2: perfect defense (at least 4 apples)
 
-Jaime trained hard and defended few apples, as Kartik did, so this goal may be closer to what they were aiming for. With "all of at least 4 defended apples clean" as the goal, the optimal policy has a 0.83 chance under the prior (1.00 with the true settings). Jaime lost **0.27** of that, all from the three reviews (0.05, 0.09, 0.13), and every practice and the final test were optimal. Their actual chance of 4 of 4 at skill 0.75 was 32%.
+Jaime trained hard and defended few apples, as Kartik did, so this goal may be closer to what they were aiming for. With "all of at least 4 defended apples clean" as the goal, the optimal policy has a 0.83 chance under the prior (1.00 with the true settings). Jaime lost **0.27** of that, all from the three reviews (0.05, 0.09, 0.13), and every practice and the defense were optimal. Their actual chance of 4 of 4 at skill 0.75 was 32%.
 
 ## Takeaways
 
@@ -74,7 +74,7 @@ Jaime trained hard and defended few apples, as Kartik did, so this goal may be c
 
 ## LLMs on Jaime's seed
 
-Each player ran 10 games on seed 220085 with the same settings. Values are means ± 95% CI.
+Each player ran 10 games on seed 220085 with the same settings. Values are means ± 95% CI. These 30 games ran while the game briefly used "apprentice / final test" wording instead of "PhD student / thesis defense". The rules, actions and numbers were the same.
 
 | Player | Games | Score | Defended | Clean % | Expected score | Loss vs optimal | Reviews | Reviewed on day 1 |
 |---|---|---|---|---|---|---|---|---|
