@@ -1,5 +1,6 @@
 file,pid,player,seed,round,score,defended,clean_pct,final_skill,expected,loss,reviews,apples_practice,apples_demo,apples_review,days,cost_usd
 orchard_Abhay_1.json,Abhay 1,Human,513651,1,6,15,40.0,0.5,7.5,0.019,0,1,4,0,4,
+orchard_Jaime_1.json,Jaime 1,Human,220085,1,3,4,75.0,0.75,3.0,5.534,3,5,2,9,10,
 orchard_Kartik_1.json,Kartik 1,Human,381892,1,5,5,100.0,0.95,4.75,4.772,2,4,6,5,10,
 rep_llm_s381892_r01_1794879326.json,rep_llm_s381892_r01,LLM only,381892,1,8,11,72.7,0.7,7.7,2.119,1,6,0,3,8,0.5080828
 rep_llm_s381892_r02_1794879319.json,rep_llm_s381892_r02,LLM only,381892,1,8,11,72.7,0.7,7.7,2.119,1,6,0,3,8,0.49423779999999995

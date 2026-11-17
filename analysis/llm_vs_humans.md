@@ -23,9 +23,12 @@ Two LLM players, adapted from [robocode](https://github.com/tomsilver/robocode),
 | **Opus 5.5, coding agent** | 20 | 4.75 ± 0.63 | 9.05 ± 1.18 | 55.4 ± 8.5 | 0.67 ± 0.06 | **5.75 ± 0.38** | **3.31 ± 0.38** | 1.95 | $0.92 |
 | Kartik | 1 | 5 | 5 | **100** | 0.95 | 4.75 | 4.77 | 2 | |
 | Abhay | 1 | 6 | 15 | 40 | 0.50 | 7.50 | 0.02 | 0 | |
+| [Jaime](jaime_1.md) † | 1 | 3 | 4 | 75 | 0.75 | 3.00 | 5.53 | 3 | |
 | *Bayes-optimal* | | | *15* | | *0.55* | *8.25* | *0* | *0* | |
 
 \* The CLI (2.1.299) doesn't know Fable 5.2's price and reports almost zero, so this cost is estimated from token counts at $8 / $40 per MTok. Fable's games used little thinking: 16.8k thinking tokens across all 10.
+
+† Jaime played a different seed (220085) that no LLM has played yet. Same settings otherwise.
 
 **Clean % measures accuracy, not score.** Defending fewer apples after more training gives a higher clean % but usually a lower score. Kartik is the extreme case: 100% clean on only 5 apples, for a score of 5. Abhay got 40% on 15 apples, for a score of 6 and a much higher expected score. The optimal policy also aims for about 55% on 15 apples rather than high accuracy. Every model ends up between those two extremes (51–56%).
 
@@ -89,7 +92,7 @@ P = practice, D = demo, Rm = mock review of m apples. "Expected score" is apples
 
 ## Caveats
 
-- **Two humans, two seeds.** The LLM numbers now rest on 20 games per player, but the human side is still 2 people, each playing once.
+- **Three humans, three seeds.** The LLM numbers rest on 10–20 games per player, but the human side is 3 people, each playing once. [Jaime](jaime_1.md) (loss 5.53, three reviews) is on a seed the LLMs haven't played yet.
 - **Effort.** The Opus 5.5 runs used adaptive thinking at the CLI's default effort for both players. An earlier version of this page said "no extended thinking", which was wrong: the CLI ignored `--max-thinking-tokens 0`, and a test prompt still produced thinking tokens.
 - **The optimal baseline depends on the prior.** The solver assumes a uniform prior over k₀ ∈ {0,…,0.5}, lr ∈ {0.025,…,0.2} and demo ∈ {1.5, 3}, and it knows the game's structure. Losses are measured against that.
 - **Wording changed after these runs.** All games on this page used the earlier "PhD student / thesis defense" rules text. The game and the LLM players now say "apprentice / final test" instead; the actions and rules are otherwise unchanged.
